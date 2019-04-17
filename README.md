@@ -91,10 +91,11 @@ Usage: ./classifier --video <video file>/--capture <0>  [required]
 		Sample:
 		% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py VGG16_NNIR VGG16_OpenVX
 
-**Note:** 
-    * The weights.bin, annmodule.cpp, & annmodule.h files will be generated inside the OpenVX folder and you can use that as an input for this project.
-    * Copy annmodule.cpp into the source folder.
-    * Copy annmodule.h into the include folder.
+**Note:**
+
+	* The weights.bin, annmodule.cpp, & annmodule.h files will be generated inside the OpenVX folder and you can use these as inputs for this project.
+	* Copy annmodule.cpp into the source folder.
+	* Copy annmodule.h into the include folder.
 
 #### label < path to labels file >
 
@@ -127,7 +128,7 @@ Run classification on the live camera feed with this option.
 
 * **Step 2:** Download pre-trained VGG 16 caffe model - [VGG_ILSVRC_16_layers.caffemodel](http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel)
 
-* **Step 3:** Use MIVisionX Model Compiler to extract weights.bin file from the pre-trained caffe model
+* **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
 
 
 	* Convert .caffemodel to NNIR
@@ -142,10 +143,18 @@ Run classification on the live camera feed with this option.
 	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py VGG16_NNIR VGG16_OpenVX
 	````
 
-	**Note:** Use weights.bin, annmodule.cpp and anmodule.h generated in VGG16_OpenVX folder to run the classifier on live video
+	**Note:** 
+
+	* Copy annmodule.cpp into the source folder 
+	* Copy annmodule.h into the include folder
+	* After copying the files, build this project
+	* Use weights.bin generated in VGG16_OpenVX folder for the classifier --model_weights option
 
 ```
-./classifier    --label PATH_TO/labels.txt 
+./classifier    --label PATH_TO/data/simple_labels.txt 
                 --capture 0 
-                --model_weights PATH_TO/VGG16_OpenVX/weights.bin 
+                --model_weights PATH_TO/VGG16_OpenVX/weights.bin
+		--model_name VGGNet-16
+		--model_inputs 3,224,224
+		--model_outputs 1000
 ```
