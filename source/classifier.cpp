@@ -150,9 +150,9 @@ static void show_usage()
             "--video <video file>/--capture <0>         [required]\n"
             "--model_weights   <model-weights.bin>      [required]\n"    
             "--label           <label text>             [required]\n"
-            "--model_name      <model name>             [optional -- default:NN_ModelName]\n" 
-            "--model_inputs    <3,224,224>              [c,h,w - optional -- default:3,224,224]\n"
-            "--model_outputs   <1000>                   [num output classes - optional -- default:1000]\n\n" 
+            "--model_name    <model name> [optional - default:NN_ModelName]\n"
+            "--model_inputs  <c,h,w>  	  [optional - default:3,224,224]\n"
+            "--model_outputs <N Classes>  [optional - default:1000]\n\n"
             "[options] --help/--h\n"   
             "\n"
         );
