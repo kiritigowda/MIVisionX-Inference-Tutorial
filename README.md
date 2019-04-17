@@ -27,6 +27,8 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 
 ### Build - Inference Application
 
+<p align="center"><img width="50%" src="images/app-control.png" /></p>
+
 Once the OpenVX code is generated and the files (annmodule.cpp & annmodule.h) copied into this project folder, follow the instructions below to build the project.
 
 * Clone this Project
@@ -45,6 +47,9 @@ make
 ````
 
 ### Run
+
+<p align="center"><img width="50%" src="images/app_display.png" /></p>
+
 ```
 Usage: ./classifier --video <video file>/--capture <0>  [required]
                     --model_weights <model-weights.bin> [required]
@@ -122,6 +127,8 @@ Run classification on the live camera feed with this option.
 
 ### Run VGG 16 Classification on Live Video
 
+<p align="center"><img width="50%" src="images/app-control.png" /></p>
+
 * **Step 1:** Install all the Prerequisites
 
 	**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
@@ -149,6 +156,8 @@ Run classification on the live camera feed with this option.
 	* Copy annmodule.h into the include folder
 	* After copying the files, build this project
 	* Use weights.bin generated in VGG16_OpenVX folder for the classifier --model_weights option
+	
+	<p align="center"><img width="50%" src="images/app_display.png" /></p>
 
 ```
 ./classifier    --label PATH_TO/data/simple_labels.txt 
