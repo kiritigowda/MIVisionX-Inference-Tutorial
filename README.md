@@ -2,7 +2,7 @@
 
 <p align="center"><img width="80%" src="images/modelCompilerWorkflow.png" /></p>
 
-In this tutorial we will learn how to run inference efficiently using [OpenVX](https://www.khronos.org/openvx/) and [OpenVX Extensions](https://www.khronos.org/registry/OpenVX/extensions/vx_khr_nn/1.2/html/index.html). The tutorial will go over each step required to convert a pre-tained neural net model into an OpenVX Graph and run this graph efficiently on any target hardware. In this tutorial we will learn about AMD MIVisionX which delivers open source implementation of OpenVX and OpenVX Extensions along with MIVisionX Neural Net Model Compiler & Optimizer.
+In this tutorial, we will learn how to run inference efficiently using [OpenVX](https://www.khronos.org/openvx/) and [OpenVX Extensions](https://www.khronos.org/registry/OpenVX/extensions/vx_khr_nn/1.2/html/index.html). The tutorial will go over each step required to convert a pre-trained neural net model into an OpenVX Graph and run this graph efficiently on any target hardware. In this tutorial, we will learn about AMD MIVisionX which delivers open source implementation of OpenVX and OpenVX Extensions along with MIVisionX Neural Net Model Compiler & Optimizer.
 
 [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) converts pre-trained neural network models to MIVisionX runtime code for optimized inference.
 
@@ -23,7 +23,7 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 
 ### Neural Net Model Compiler & Optimizer - OpenVX Code Generation
 
-Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp into the source folder of this project & copy annmodule.h into the include folder of this project. The whole process of inference from a pre-trained neural net models will be show in 3 different samples below.
+Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp into the source folder of this project & copy annmodule.h into the include folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples below.
 
 ### Build - Inference Application
 
