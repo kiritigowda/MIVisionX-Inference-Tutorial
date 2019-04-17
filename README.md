@@ -23,7 +23,7 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 
 ### Neural Net Model Compiler & Optimizer - OpenVX Code Generation
 
-Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp into the source folder of this project & copy annmodule.h into the include folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples below.
+Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp into the source folder of this project & copy annmodule.h into the include folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples [below](#sample-1---pre-trained-caffe-model).
 
 ### Build - Inference Application
 
@@ -135,13 +135,15 @@ Run classification on the live camera feed with this option.
 
 * **Step 2:** Download pre-trained VGG 16 caffe model - [VGG_ILSVRC_16_layers.caffemodel](http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel)
 
+	**Note:** Upgrade this model using [caffe-net-upgrade](https://github.com/lcskrishna/caffe-net-upgrade)
+
 * **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
 
 
 	* Convert .caffemodel to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
+	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py upgraded_VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
 	````
 
 	* Convert NNIR to OpenVX
