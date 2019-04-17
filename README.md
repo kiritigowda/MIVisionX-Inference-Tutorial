@@ -1,4 +1,4 @@
-# MIVisionX Live Image Classification
+# MIVisionX Image Classification Using Pre-Trained Neural Net Models
 
 This application is a shell to run know CNN image classifiers on live or pre-recorded video streams.
 
