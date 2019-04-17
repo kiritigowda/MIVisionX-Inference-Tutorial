@@ -1,4 +1,4 @@
-# OpenVX Image Classification Using Pre-Trained Neural Net Models
+## OpenVX Image Classification using Pre-Trained Neural Net Models
 
 <p align="center"><img width="80%" src="images/modelCompilerWorkflow.png" /></p>
 
