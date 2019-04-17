@@ -121,7 +121,7 @@ Run classification on the live camera feed with this option.
 * NNEF
 * ONNX
 
-<p align="center"><img width="100%" src="images/modelTrainedFrameWorks.png" /></p>
+<p align="center"><img width="70%" src="images/modelTrainedFrameWorks.png" /></p>
 
 ## Sample 1 - Pre-Trained Caffe Model
 
