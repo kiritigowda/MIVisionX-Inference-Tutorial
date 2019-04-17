@@ -1,8 +1,8 @@
-# MIVisionX Image Classification Using Pre-Trained Neural Net Models
+# Image Classification Using Pre-Trained Neural Net Models
 
 <p align="center"><img width="80%" src="images/modelCompilerWorkflow.png" /></p>
 
-In this tutorial we will learn how to run inference efficiently using OpenVX and OpenVX Extensions. The tutorial will go over each step required to convert a pre-tained neural net model into an OpenVX Graph and run this graph efficiently on any target hardware. In this tutorial we will learn about AMD MIVisionX which delivers Open Source implementation of OpenVX and OpenVX extensions along with MIVisionX Neural Net Model Compiler & Optimizer.
+In this tutorial we will learn how to run inference efficiently using [OpenVX](https://www.khronos.org/openvx/) and [OpenVX Extensions](https://www.khronos.org/registry/OpenVX/extensions/vx_khr_nn/1.2/html/index.html). The tutorial will go over each step required to convert a pre-tained neural net model into an OpenVX Graph and run this graph efficiently on any target hardware. In this tutorial we will learn about AMD MIVisionX which delivers open source implementation of OpenVX and OpenVX Extensions along with MIVisionX Neural Net Model Compiler & Optimizer.
 
 [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) converts pre-trained neural network models to MIVisionX runtime code for optimized inference.
 
@@ -13,9 +13,11 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 ### Prerequisites
 
 * Ubuntu `16.04`/`18.04` or CentOS `7.5`/`7.6`
-* [ROCm supported hardware](https://rocm.github.io/ROCmInstall.html#hardware-support)
+* [ROCm supported hardware](https://rocm.github.io/ROCmInstall.html#hardware-support) 
+	* GPU or APU required
 * [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 * Build & Install [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#linux-1)
+	* MIVisionX installs model compiler at `/opt/rocm/mivisionx`
 
 ## Usage
 
