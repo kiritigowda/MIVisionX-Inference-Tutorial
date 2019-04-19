@@ -135,7 +135,6 @@ Run classification on the live camera feed with this option.
 
 * **Step 2:** Download pre-trained VGG 16 caffe model - [VGG_ILSVRC_16_layers.caffemodel](http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel)
 
-	**Note:** Upgrade this model using [caffe-net-upgrade](https://github.com/lcskrishna/caffe-net-upgrade)
 
 * **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
 
