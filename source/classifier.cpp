@@ -496,31 +496,47 @@ int main(int argc, const char ** argv)
                     return -1;
                 }
                 count = dims[0] * dims[1] * dims[2] * dims[3];
+
                 vx_status status = vxMapTensorPatch(input_data_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
                 if(status) {
                     std::cerr << "ERROR: vxMapTensorPatch() failed for " <<  std::endl;
                     return -1;
                 }
                 Mat srcImg;
+                float *dstR, *dstG, *dstB;
                 for(size_t n = 0; n < dims[3]; n++) {
                     srcImg = inputFrame_data_resized;
+                    if (dims[2] == 1) {
+                        cv::cvtColor(srcImg, srcImg, CV_BGR2GRAY);
+                    }
                     for(vx_size y = 0; y < dims[1]; y++) {
-                        unsigned char * src = srcImg.data + y*dims[0]*3;
-                        float * dstR = ptr + ((n * stride[3] + y * stride[1]) >> 2);
-                        float * dstG = dstR + (stride[2] >> 2);
-                        float * dstB = dstG + (stride[2] >> 2);
-                        for(vx_size x = 0; x < dims[0]; x++, src += 3) {
-                            if(input_w != 299){
-                            *dstR++ = src[2];
-                            *dstG++ = src[1];
-                            *dstB++ = src[0];
+                        unsigned char * src = srcImg.data + y*dims[0]*dims[2];
+                        dstR = ptr + ((n * stride[3] + y * stride[1]) >> 2);
+                        if (dims[2] == 3) {
+                            dstG = dstR + (stride[2] >> 2);
+                            dstB = dstG + (stride[2] >> 2);
+                        }
+                        for(vx_size x = 0; x < dims[0]; x++, src += dims[2]) {
+                            if(input_w != 299) {
+                                if(dims[2] == 3) {
+                                    *dstR++ = src[2];
+                                    *dstG++ = src[1];
+                                    *dstB++ = src[0];
+                                }
+                                else if (dims[2] == 1) {
+                                    *dstR++ = src[0];
+                                }
                             }
                             else{
-                            *dstR++ = (src[2] * 0.007843137) - 1;
-                            *dstG++ = (src[1] * 0.007843137) - 1;
-                            *dstB++ = (src[0] * 0.007843137) - 1;
+                                if(dims[2] == 3) {
+                                    *dstR++ = (src[2] * 0.007843137) - 1;
+                                    *dstG++ = (src[1] * 0.007843137) - 1;
+                                    *dstB++ = (src[0] * 0.007843137) - 1;
+                                }
+                                else if (dims[2] == 1) {
+                                    *dstR++ = (src[0] * 0.007843137) - 1;
+                                }
                             }
-
                         }
                     }
                 }
