@@ -271,6 +271,33 @@ source/region.cpp.s:
 	$(MAKE) -f CMakeFiles/classifier.dir/build.make CMakeFiles/classifier.dir/source/region.cpp.s
 .PHONY : source/region.cpp.s
 
+source/segmentation.o: source/segmentation.cpp.o
+
+.PHONY : source/segmentation.o
+
+# target to build an object file
+source/segmentation.cpp.o:
+	$(MAKE) -f CMakeFiles/classifier.dir/build.make CMakeFiles/classifier.dir/source/segmentation.cpp.o
+.PHONY : source/segmentation.cpp.o
+
+source/segmentation.i: source/segmentation.cpp.i
+
+.PHONY : source/segmentation.i
+
+# target to preprocess a source file
+source/segmentation.cpp.i:
+	$(MAKE) -f CMakeFiles/classifier.dir/build.make CMakeFiles/classifier.dir/source/segmentation.cpp.i
+.PHONY : source/segmentation.cpp.i
+
+source/segmentation.s: source/segmentation.cpp.s
+
+.PHONY : source/segmentation.s
+
+# target to generate assembly for a file
+source/segmentation.cpp.s:
+	$(MAKE) -f CMakeFiles/classifier.dir/build.make CMakeFiles/classifier.dir/source/segmentation.cpp.s
+.PHONY : source/segmentation.cpp.s
+
 source/visualize.o: source/visualize.cpp.o
 
 .PHONY : source/visualize.o
@@ -323,6 +350,9 @@ help:
 	@echo "... source/region.o"
 	@echo "... source/region.i"
 	@echo "... source/region.s"
+	@echo "... source/segmentation.o"
+	@echo "... source/segmentation.i"
+	@echo "... source/segmentation.s"
 	@echo "... source/visualize.o"
 	@echo "... source/visualize.i"
 	@echo "... source/visualize.s"

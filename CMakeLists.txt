@@ -46,7 +46,8 @@ list(APPEND SOURCES
 	source/visualize.cpp
 	source/common.cpp 
 	source/classification.cpp
-    source/classifier.cpp)
+    source/classifier.cpp
+	source/segmentation.cpp)
 	
 add_library(caffeModels SHARED source/annmodule.cpp)
 target_link_libraries(caffeModels openvx vx_nn pthread)
