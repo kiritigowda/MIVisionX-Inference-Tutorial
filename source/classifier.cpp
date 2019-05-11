@@ -457,10 +457,8 @@ int main(int argc, const char ** argv)
 
     double alpha = 0.8, beta;
     beta = ( 1.0 - alpha );
-<<<<<<< HEAD
+
     cv::Mat inputDisplay, outputDisplay, maskDisplay;
-=======
->>>>>>> fcf27237044ce3f05f2db73554ea97867830b4b3
 
     // Time per frame
     modelTime_g = modelTime;
@@ -917,15 +915,7 @@ int main(int argc, const char ** argv)
                 }
 
                 // wait to close live inference application
-                if( cv::waitKey(2) == 27 )
-                { 
-                	if(modeType == "3" or modeType == "segmentation")
-                	{
-                		pipeLineThread[0].join(); exitVar = 0;
-                	}
-                	loopSeg = 0; 
-                	break; 
-                } // stop capturing by pressing ESC
+                if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
                 else if( cv::waitKey(2) == 82 ){ break; } // for restart pressing R
 
                 frameCount++;

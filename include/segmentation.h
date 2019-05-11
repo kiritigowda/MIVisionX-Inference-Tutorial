@@ -21,10 +21,6 @@ public:
     int threshold_slider_max;
     int threshold_slider;
     double thresholdValue;
-    int color_slider_max;
-    int color_slider;
-    int colorPointer;
-    double colorValue;
     int alpha_slider_max;
     int alpha_slider;
     double alphaValue;
@@ -36,8 +32,6 @@ public:
     static void threshold_on_trackbar( int threshold_slider_max, void* threshold_slider);
 
     static void alpha_on_trackbar( int threshold_slider_max, void* threshold_slider);
-
-    static void color_on_trackbar( int color_slider_max, void* color_slider);
 
     void findClassProb(size_t start , size_t end, int width, int height, int numClasses, float* output_layer, float threshold, float* prob, unsigned char* classImg);
 
