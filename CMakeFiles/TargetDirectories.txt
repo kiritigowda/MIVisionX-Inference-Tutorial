@@ -1,4 +1,0 @@
-/home/lakshmi/Downloads/lk/MIVisionX-Inference-Tutorial/CMakeFiles/edit_cache.dir
-/home/lakshmi/Downloads/lk/MIVisionX-Inference-Tutorial/CMakeFiles/caffeModels.dir
-/home/lakshmi/Downloads/lk/MIVisionX-Inference-Tutorial/CMakeFiles/rebuild_cache.dir
-/home/lakshmi/Downloads/lk/MIVisionX-Inference-Tutorial/CMakeFiles/classifier.dir
