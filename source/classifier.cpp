@@ -457,7 +457,10 @@ int main(int argc, const char ** argv)
 
     double alpha = 0.8, beta;
     beta = ( 1.0 - alpha );
+<<<<<<< HEAD
     cv::Mat inputDisplay, outputDisplay, maskDisplay;
+=======
+>>>>>>> fcf27237044ce3f05f2db73554ea97867830b4b3
 
     // Time per frame
     modelTime_g = modelTime;
@@ -672,6 +675,7 @@ int main(int argc, const char ** argv)
             int frameCount = 0;
             float msFrame = 0, fpsAvg = 0, frameMsecs = 0;
             int pipelinePointer = -1;
+
             for(;;)
             {
                 if(modeType == "3" or modeType == "segmentation")
@@ -696,6 +700,7 @@ int main(int argc, const char ** argv)
                 // preprocess image frame
                 t0 = clockCounter();
                 if(modeType == "1" or modeType == "classification" or modeType == "2" or modeType == "detection")
+
                     cv::resize(frame, inputFrame_data_resized, cv::Size(input_h,input_w));
                 else if(modeType == "3" or modeType == "segmentation")
                      cv::resize(frame, inputFrame[pipelinePointer], cv::Size(2048,1024));
@@ -734,6 +739,7 @@ int main(int argc, const char ** argv)
                     float *dstR, *dstG, *dstB;
                     for(size_t n = 0; n < dims[3]; n++) {
                         if(modeType == "1" or modeType == "classification" or modeType == "2" or modeType == "detection")
+
                             srcImg = inputFrame_data_resized;
                         else if(modeType == "3" or modeType == "segmentation")
                              srcImg = inputFrame[pipelinePointer];
@@ -860,6 +866,7 @@ int main(int argc, const char ** argv)
 
                 else if(modeType == "3" or modeType == "segmentation")
                 {
+
                     t0 = clockCounter();
                     usage = VX_READ_ONLY;
                     vx_enum data_type = VX_TYPE_FLOAT32;
@@ -895,6 +902,7 @@ int main(int argc, const char ** argv)
 			        cv::imshow("Mask Image", maskDisplay);
 			        cv::imshow("Merged Image", outputDisplay );
 
+
                     t1 = clockCounter();
                     msFrame += (float)(t1-t0)*1000.0f/(float)freq;
                 }
@@ -909,7 +917,15 @@ int main(int argc, const char ** argv)
                 }
 
                 // wait to close live inference application
-                if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
+                if( cv::waitKey(2) == 27 )
+                { 
+                	if(modeType == "3" or modeType == "segmentation")
+                	{
+                		pipeLineThread[0].join(); exitVar = 0;
+                	}
+                	loopSeg = 0; 
+                	break; 
+                } // stop capturing by pressing ESC
                 else if( cv::waitKey(2) == 82 ){ break; } // for restart pressing R
 
                 frameCount++;
