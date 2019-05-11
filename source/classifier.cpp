@@ -31,10 +31,13 @@ THE SOFTWARE.
 
 // c/c++ includes
 #include <chrono>
+#include <thread>
+#include <functional>
 
 //header file for different mode
 #include "region.h"
 #include "classification.h"
+#include "segmentation.h"
 
 bool runModel = false;
 float modelTime_g;
@@ -365,7 +368,6 @@ int main(int argc, const char ** argv)
         printf("ERROR: vxCreateTensor() failed for prob\n");
         return -1;
     }
-
     // build graph using annmodule
     int64_t freq = clockFrequency(), t0, t1;
     char modelWeights[1024];
@@ -429,6 +431,34 @@ int main(int argc, const char ** argv)
     int confidence = 0.2;
     float threshold_detect = 0.18;
     
+    /*****Additions for segmentation****/
+    Segment *mSegment = new Segment;
+    int pipelineDepth = 2;
+    int total_size = 2048*1024*19*1;
+    int input_dims[4]={0};
+    input_dims[0] = 1; input_dims[1] = 19;
+    input_dims[2] = 1024; input_dims[3] = 2048;
+    std::thread pipeLineThread[pipelineDepth];
+    cv::Mat inputFrame[pipelineDepth];
+    cv::Mat maskImage[pipelineDepth];
+
+    int outputImgWidth = 1080, outputImgHeight = 720;
+    cv::Size input_geometry = cv::Size(input_dims[3], input_dims[2]);
+    cv::Size output_geometry = cv::Size(outputImgWidth, outputImgHeight);
+    float *outputBuffer_seg[pipelineDepth];
+    unsigned char *classIDBuf[pipelineDepth];
+    float *prob[pipelineDepth];
+    for(int p = 0; p < pipelineDepth; p++){
+        outputBuffer_seg[p] = new float[total_size];
+        classIDBuf[p] = new unsigned char[1024 * 2048];
+        prob[p] = new float[1024 * 2048];
+        maskImage[p].create(input_geometry, CV_8UC3);
+    }
+
+    double alpha = 0.8, beta;
+    beta = ( 1.0 - alpha );
+
+    // Time per frame
     modelTime_g = modelTime;
 
     // define variables for run
@@ -576,6 +606,43 @@ int main(int argc, const char ** argv)
                 cv::waitKey(0);
                 delete mVisualize;
             }
+            else if(modeType == "3" or modeType ==" segmentation")
+            {
+            	int pipelinePointer = -1;
+                usage = VX_READ_ONLY;
+                if(runModel)
+                {
+                	vx_enum data_type = VX_TYPE_FLOAT32;
+				    vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+				    vx_map_id map_id;
+				    float * ptr;
+				    vx_size count;
+				    vx_enum usage = VX_READ_ONLY;
+				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+				    vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+				    if(data_type != VX_TYPE_FLOAT32) {
+				        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+				    }
+				    count = dims[0] * dims[1] * dims[2] * dims[3];
+				    vx_status status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+				    if(status) {
+				        std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+				    }
+
+				    memcpy(outputBuffer_seg[pipelinePointer], ptr, (count*sizeof(float)));
+				    
+				    status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+				    if(status) {
+				        std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+				    }
+
+		            pipeLineThread[0] = std::thread(&Segment::processOutput, mSegment,
+		            	outputBuffer_seg[pipelinePointer],input_dims,prob[pipelinePointer],
+		                classIDBuf[pipelinePointer],input_geometry,output_geometry, std::ref(inputFrame[pipelinePointer]),std::ref(maskImage[pipelinePointer]), labelText);
+		            std::cout << "back here!!!\n";
+                }
+            }
         }
     }
     //mode - video/ live capture
@@ -601,8 +668,19 @@ int main(int argc, const char ** argv)
 
             int frameCount = 0;
             float msFrame = 0, fpsAvg = 0, frameMsecs = 0;
+            int pipelinePointer = -1;
+        	int exitVar = 1;
             for(;;)
             {
+            	if(modeType == "3" or modeType == "segmentation")
+            	{
+            		// find pipeline pointer number as a variable of pipeline depth
+            		if((frameCount%pipelineDepth) == 0) 
+            			pipelinePointer = 0; 
+            		else 
+            			pipelinePointer = 1;
+            	}
+
                 msFrame = 0;
                 // capture image frame
                 t0 = clockCounter();
@@ -615,7 +693,11 @@ int main(int argc, const char ** argv)
 
                 // preprocess image frame
                 t0 = clockCounter();
-                cv::resize(frame, inputFrame_data_resized, cv::Size(input_h,input_w));
+                if(modeType == "1" or modeType == "classification" or modeType == "2" or modeType == "detection")
+                	cv::resize(frame, inputFrame_data_resized, cv::Size(input_h,input_w));
+                else if(modeType == "3" or modeType == "segmentation")
+                	 cv::resize(frame, inputFrame[pipelinePointer], cv::Size(2048,1024));
+
                 t1 = clockCounter();
                 msFrame += (float)(t1-t0)*1000.0f/(float)freq;
                 //printf("LIVE: OpenCV Frame Resize Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
@@ -649,7 +731,11 @@ int main(int argc, const char ** argv)
                     cv::Mat srcImg;
                     float *dstR, *dstG, *dstB;
                     for(size_t n = 0; n < dims[3]; n++) {
-                        srcImg = inputFrame_data_resized;
+                        if(modeType == "1" or modeType == "classification" or modeType == "2" or modeType == "detection")
+                        	srcImg = inputFrame_data_resized;
+                        else if(modeType == "3" or modeType == "segmentation")
+                        	 srcImg = inputFrame[pipelinePointer];
+
                         if (dims[2] == 1) {
                             cv::cvtColor(srcImg, srcImg, CV_BGR2GRAY);
                         }
@@ -769,6 +855,51 @@ int main(int argc, const char ** argv)
                     t1 = clockCounter();
                     msFrame += (float)(t1-t0)*1000.0f/(float)freq;
                 }
+
+                else if(modeType == "3" or modeType == "segmentation")
+                {
+                	t0 = clockCounter();
+                    usage = VX_READ_ONLY;
+                    if(runModel)
+                    {
+                    	if((frameCount != 0))
+                			pipeLineThread[0].join();
+
+                		vx_enum data_type = VX_TYPE_FLOAT32;
+					    vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+					    vx_map_id map_id;
+					    float * ptr;
+					    vx_size count;
+					    vx_enum usage = VX_READ_ONLY;
+					    vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+					    vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+					    vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+					    if(data_type != VX_TYPE_FLOAT32) {
+					        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+					    }
+					    count = dims[0] * dims[1] * dims[2] * dims[3];
+					    vx_status status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+					    if(status) {
+					        std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+					    }
+
+					    memcpy(outputBuffer_seg[pipelinePointer], ptr, (count*sizeof(float)));
+					    
+					    status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+					    if(status) {
+					        std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+					    }
+
+			            pipeLineThread[0] = std::thread(&Segment::processOutput, mSegment,
+			            	outputBuffer_seg[pipelinePointer],input_dims,prob[pipelinePointer],
+			                classIDBuf[pipelinePointer],input_geometry,output_geometry, std::ref(inputFrame[pipelinePointer]),std::ref(maskImage[pipelinePointer]), labelText);
+			            std::cout << "back here!!!\n";
+                    }
+                    t1 = clockCounter();
+                    msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                }
+
+
                 // calculate FPS
                 //printf("LIVE: msec for frame -- %.3f msec\n", (float)msFrame);
                 frameMsecs += msFrame;
@@ -778,20 +909,36 @@ int main(int argc, const char ** argv)
                 }
 
                 // wait to close live inference application
-                if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
+                if( cv::waitKey(2) == 27 )
+                { 
+                	if(modeType == "3" or modeType == "segmentation")
+                	{
+                		pipeLineThread[0].join(); exitVar = 0;
+                	}
+                	loopSeg = 0; 
+                	break; 
+                } // stop capturing by pressing ESC
                 else if( cv::waitKey(2) == 82 ){ break; } // for restart pressing R
 
                 frameCount++;
-            }
+            }  
+
+            if(exitVar) pipeLineThread[0].join();
         }
     }
    
     
     // release resources
     
-    delete [] outputBuffer;
-    
+    delete [] outputBuffer;   
     delete mRegion;
+    delete mClassifier;
+    delete mSegment;
+    for(int p = 0; p < pipelineDepth; p++){
+        delete outputBuffer_seg[p];
+        delete classIDBuf[p];
+        delete prob[p];
+    }
     // release input data
     ERROR_CHECK_STATUS(vxReleaseTensor(&input_data_tensor));
     // release output data
