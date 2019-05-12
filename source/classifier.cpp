@@ -113,6 +113,8 @@ int main(int argc, const char ** argv)
     int parameter = 0;
     vx_status status = 0;
 
+    bool modeType_bool = false, model_weights_bool = false, label_bool = false, runType_bool = false, model_inputs_bool = false, model_outputs_bool = false;
+
     for(int arg = 1; arg < argc; arg++)
     {
         if (!strcasecmp(argv[arg], "--help") || !strcasecmp(argv[arg], "--H") || !strcasecmp(argv[arg], "--h"))
@@ -132,6 +134,7 @@ int main(int argc, const char ** argv)
             arg++;
             modelWeights_str = (argv[arg]);
             parameter++;
+            model_weights_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--label"))
         {
@@ -154,6 +157,7 @@ int main(int argc, const char ** argv)
             classes = lineNum;
             out.close();
             parameter++;
+            label_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--video"))
         {
@@ -168,6 +172,7 @@ int main(int argc, const char ** argv)
             videoFile = (argv[arg]);
             captureFromVideo = true;
             parameter++;
+            runType_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--image"))
         {
@@ -182,6 +187,7 @@ int main(int argc, const char ** argv)
             imageFile = (argv[arg]);
             imageFileInput = true;
             parameter++;
+            runType_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--capture"))
         {
@@ -195,6 +201,7 @@ int main(int argc, const char ** argv)
             arg++;
             captureID = atoi(argv[arg]);
             parameter++;
+            runType_bool = true;
         }
         else if(!strcasecmp(argv[arg], "--mode"))
         {
@@ -208,6 +215,7 @@ int main(int argc, const char ** argv)
             arg++;
             modeType = (argv[arg]);
             parameter++;
+            modeType_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--model_name"))
         {
@@ -245,7 +253,8 @@ int main(int argc, const char ** argv)
             input_c = vect.at(0);
             input_h = vect.at(1);
             input_w = vect.at(2);
-            parameter++;            
+            parameter++;         
+            model_inputs_bool = true;   
         }
         else if (!strcasecmp(argv[arg], "--model_outputs"))
         {
@@ -272,6 +281,7 @@ int main(int argc, const char ** argv)
             output_h = vect.at(1);
             output_w = vect.at(2);
             parameter++;
+            model_outputs_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--add"))
         {
@@ -327,7 +337,18 @@ int main(int argc, const char ** argv)
     
     if (parameter < 6)
     {
-        printf("\nERROR: missing parameters in command-line.\n");
+        if(modeType_bool == false)
+            printf("\nERROR: missing parameters in command-line: mode name/type.\n");
+        if(model_weights_bool == false)
+            printf("\nERROR: missing parameters in command-line: model weights.\n");
+        if(label_bool == false)
+            printf("\nERROR: missing parameters in command-line: label file.\n");
+        if(runType_bool == false)
+            printf("\nERROR: missing parameters in command-line: image/video/capture.\n");
+        if(model_inputs_bool == false)
+            printf("\nERROR: missing parameters in command-line: model input dimensions (c,h,w).\n");
+        if(model_outputs_bool == false)
+            printf("\nERROR: missing parameters in command-line: model output dimensions (c,h,w).\n");
         show_usage();
         status = -1;
         exit(status);
