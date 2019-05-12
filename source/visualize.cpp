@@ -27,10 +27,10 @@ void Visualize::show() {
 
 		if (confidence > mConfidence) {
 
-			float left = mResults[i].left * xratio;
-			float top = mResults[i].top * yratio;
-			float right = (mResults[i].right - mResults[i].left) * xratio + left;
-			float bottom = (mResults[i].bottom - mResults[i].top) * yratio + top;
+			float left = mResults[i].left;
+			float top = mResults[i].top;
+			float right = (mResults[i].right - mResults[i].left) + left;
+			float bottom = (mResults[i].bottom - mResults[i].top)  + top;
 			int index = mResults[i].objType % mColorNum;
 			Scalar clr(colors[index][0], colors[index][1], colors[index][2]);
 			string txt = mResults[i].name;
