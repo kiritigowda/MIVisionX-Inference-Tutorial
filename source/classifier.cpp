@@ -31,90 +31,16 @@ THE SOFTWARE.
 
 // c/c++ includes
 #include <chrono>
+#include <thread>
+#include <functional>
 
-// Use OpenCV Functions
-#if ENABLE_OPENCV
-#include <opencv2/opencv.hpp>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-
-// Header file details in include folder
-#define CVUI_IMPLEMENTATION
-#include "cvui.h"
-
-using namespace cv;
-#endif
-
-// Name Output Display Windows
-#define MIVisionX_LEGEND    "MIVisionX Image Classification"
-#define MIVisionX_DISPLAY   "MIVisionX Image Classification - Display"
-
-
-// probability track bar
-const int threshold_slider_max = 100;
-int threshold_slider;
-double thresholdValue = 0.5;
-void threshold_on_trackbar( int, void* ){
-    thresholdValue = (double) threshold_slider/threshold_slider_max ;
-    return;
-}
+//header file for different mode
+#include "region.h"
+#include "classification.h"
+#include "segmentation.h"
 
 bool runModel = false;
 float modelTime_g;
-
-// create legend image for the app
-void createLegendImage(std::string modelName)
-{
-    // create display legend image
-    int fontFace = CV_FONT_HERSHEY_DUPLEX;
-    double fontScale = 0.75;
-    int thickness = 1.3;
-    cv::Size legendGeometry = cv::Size(625, (7 * 40) + 40);
-    Mat legend = Mat::zeros(legendGeometry,CV_8UC3);
-    Rect roi = Rect(0,0,625,(7 * 40) + 40);
-    legend(roi).setTo(cv::Scalar(128,128,128));
-    int l = 0, model = 0;
-    int red, green, blue;
-    std::string className;
-    std::string bufferName;
-    char buffer [50];
-
-    // add headers
-    bufferName = MIVisionX_LEGEND;
-    putText(legend, bufferName, Point(20, (l * 40) + 30), fontFace, 1.2, cv::Scalar(66,13,9), thickness,5);
-    l++;
-    l++;
-    bufferName = "Model";
-    putText(legend, bufferName, Point(100, (l * 40) + 30), fontFace, 1, Scalar::all(0), thickness,5);
-    bufferName = "ms/frame";
-    putText(legend, bufferName, Point(300, (l * 40) + 30), fontFace, 1, Scalar::all(0), thickness,5);
-    bufferName = "Color";
-    putText(legend, bufferName, Point(525, (l * 40) + 30), fontFace, 1, Scalar::all(0), thickness,5);
-    l++;
-    
-    // add legend item
-    thickness = 1;    
-    red = 255; green = 0; blue = 0;
-    className = modelName;
-    sprintf (buffer, " %.2f ", modelTime_g );
-    cvui::checkbox(legend, 30, (l * 40) + 15,"", &runModel);
-    putText(legend, className, Point(80, (l * 40) + 30), fontFace, fontScale, Scalar::all(0), thickness,3);
-    putText(legend, buffer, Point(320, (l * 40) + 30), fontFace, fontScale, Scalar::all(0), thickness,3);
-    rectangle(legend, Point(550, (l * 40)) , Point(575, (l * 40) + 40), Scalar(blue,green,red),-1);
-    l++;
-    l++;
-
-    // Model Confidence Threshold
-    bufferName = "Confidence";
-    putText(legend, bufferName, Point(250, (l * 40) + 30), fontFace, 1, Scalar::all(0), thickness,5);
-    l++;
-    cvui::trackbar(legend, 100, (l * 40)+10, 450, &threshold_slider, 0, 100);
-    cvui::update();
-
-    cv::imshow(MIVisionX_LEGEND, legend);
-    thresholdValue = (double) threshold_slider/threshold_slider_max ;
-}
-
 
 #define ERROR_CHECK_OBJECT(obj) { vx_status status = vxGetStatus((vx_reference)(obj)); if(status != VX_SUCCESS) { vxAddLogEntry((vx_reference)context, status     , "ERROR: failed with status = (%d) at " __FILE__ "#%d\n", status, __LINE__); return status; } }
 #define ERROR_CHECK_STATUS(call) { vx_status status = (call); if(status != VX_SUCCESS) { printf("ERROR: failed with status = (%d) at " __FILE__ "#%d\n", status, __LINE__); return -1; } }
@@ -146,13 +72,15 @@ static void show_usage()
     printf(
             "\n"
             "Usage: ./classifier \n"
-            //"--video <video file>/--capture <0>/--image <image file>        [required]\n"
-            "--video <video file>/--capture <0>         [required]\n"
+            "--mode          <1:classification 2:detetction 3:segmentation [required]\n"
+            "--video <video file>/--capture <0>/--image <image file>        [required]\n"
             "--model_weights   <model-weights.bin>      [required]\n"    
             "--label           <label text>             [required]\n"
+            "--model_inputs  <c,h,w>      [required]\n"
+            "--model_outputs <c,h,w>      [required]\n\n"
             "--model_name    <model name> [optional - default:NN_ModelName]\n"
-            "--model_inputs  <c,h,w>  	  [optional - default:3,224,224]\n"
-            "--model_outputs <N Classes>  [optional - default:1000]\n\n"
+            "--add <Ax,Ay,Az>             [optional - default:0,0,0]\n"
+            "--multiply <Mx,My,Mz>        [optional - default:1,1,1]\n"
             "[options] --help/--h\n"   
             "\n"
         );
@@ -162,21 +90,30 @@ int main(int argc, const char ** argv)
 {
     // check command-line usage   
     std::string modelWeights_str = "empty";
+    std::string modeType = "empty"; 
     std::string videoFile = "empty";
     std::string imageFile = "empty";
     std::string labelFileName = "empty";
     std::string modelInputs = "empty";
+    std::string modelOutputs = "empty";
     std::string NN_ModelName = "NN-Model";
     std::string labelText[1000];
+    std::string preprocessAdd = "empty";
+    std::string preprocessMultiply = "empty";
 
     int captureID = -1;
     bool captureFromVideo = false;
     bool imageFileInput = false;
-    int input_c = 3, input_h = 224, input_w = 224;
-    int modelOutput = 1000;
+    int input_c, input_h, input_w;
+    int output_c, output_h, output_w ;
+    float Mx = 1, My = 1 , Mz = 1;
+    float Ax = 0, Ay = 0, Az = 0;
+    int classes;
     
     int parameter = 0;
     vx_status status = 0;
+
+    bool modeType_bool = false, model_weights_bool = false, label_bool = false, runType_bool = false, model_inputs_bool = false, model_outputs_bool = false;
 
     for(int arg = 1; arg < argc; arg++)
     {
@@ -197,6 +134,7 @@ int main(int argc, const char ** argv)
             arg++;
             modelWeights_str = (argv[arg]);
             parameter++;
+            model_weights_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--label"))
         {
@@ -210,14 +148,16 @@ int main(int argc, const char ** argv)
             arg++;
             labelFileName = (argv[arg]);
             std::string line;
-	        std::ifstream out(labelFileName);
-	        int lineNum = 0;
-	        while(getline(out, line)) {
-	            labelText[lineNum] = line;
-	            lineNum++;
-	        }
-	        out.close();
-	        parameter++;
+            std::ifstream out(labelFileName);
+            int lineNum = 0;
+            while(getline(out, line)) {
+                labelText[lineNum] = line;
+                lineNum++;
+            }
+            classes = lineNum;
+            out.close();
+            parameter++;
+            label_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--video"))
         {
@@ -232,6 +172,7 @@ int main(int argc, const char ** argv)
             videoFile = (argv[arg]);
             captureFromVideo = true;
             parameter++;
+            runType_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--image"))
         {
@@ -246,6 +187,7 @@ int main(int argc, const char ** argv)
             imageFile = (argv[arg]);
             imageFileInput = true;
             parameter++;
+            runType_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--capture"))
         {
@@ -259,6 +201,21 @@ int main(int argc, const char ** argv)
             arg++;
             captureID = atoi(argv[arg]);
             parameter++;
+            runType_bool = true;
+        }
+        else if(!strcasecmp(argv[arg], "--mode"))
+        {
+            if ((arg + 1) == argc)
+            {
+                printf("\n\nERROR: missing mode number on command-line (see help for details)\n\n\n");
+                show_usage();
+                status = -1;
+                exit(status);
+            }
+            arg++;
+            modeType = (argv[arg]);
+            parameter++;
+            modeType_bool = true;
         }
         else if (!strcasecmp(argv[arg], "--model_name"))
         {
@@ -296,6 +253,8 @@ int main(int argc, const char ** argv)
             input_c = vect.at(0);
             input_h = vect.at(1);
             input_w = vect.at(2);
+            parameter++;         
+            model_inputs_bool = true;   
         }
         else if (!strcasecmp(argv[arg], "--model_outputs"))
         {
@@ -307,13 +266,89 @@ int main(int argc, const char ** argv)
                 exit(status);
             }
             arg++;
-            modelOutput = atoi(argv[arg]);
+            modelOutputs = (argv[arg]);
+            
+            std::vector<int> vect;
+            std::stringstream ss(modelOutputs);
+            int i;
+            while (ss >> i)
+            {
+                vect.push_back(i);
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+            output_c = vect.at(0);
+            output_h = vect.at(1);
+            output_w = vect.at(2);
+            parameter++;
+            model_outputs_bool = true;
+        }
+        else if (!strcasecmp(argv[arg], "--add"))
+        {
+            if ((arg + 1) == argc)
+            {
+                printf("\n\nERROR: missing model inputs on command-line (see help for details)\n\n\n");
+                show_usage();
+                status = -1;
+                exit(status);
+            }
+            arg++;
+            preprocessAdd = (argv[arg]);
+            
+            std::vector<float> vect;
+            std::stringstream ss(preprocessAdd);
+            float i;
+            while (ss >> i)
+            {
+                vect.push_back(i);
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+            Ax = vect.at(0);
+            Ay = vect.at(1);
+            Az = vect.at(2);
+        }
+        else if (!strcasecmp(argv[arg], "--multiply"))
+        {
+            if ((arg + 1) == argc)
+            {
+                printf("\n\nERROR: missing model inputs on command-line (see help for details)\n\n\n");
+                show_usage();
+                status = -1;
+                exit(status);
+            }
+            arg++;
+            preprocessMultiply = (argv[arg]);
+            
+            std::vector<float> vect;
+            std::stringstream ss(preprocessMultiply);
+            float i;
+            while (ss >> i)
+            {
+                vect.push_back(i);
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+            Mx = vect.at(0);
+            My = vect.at(1);
+            Mz = vect.at(2);
         }
     }
-
-    if (parameter < 3)
+    
+    if (parameter < 6)
     {
-        printf("\nERROR: missing parameters in command-line.\n");
+        if(modeType_bool == false)
+            printf("\nERROR: missing parameters in command-line: mode name/type.\n");
+        if(model_weights_bool == false)
+            printf("\nERROR: missing parameters in command-line: model weights.\n");
+        if(label_bool == false)
+            printf("\nERROR: missing parameters in command-line: label file.\n");
+        if(runType_bool == false)
+            printf("\nERROR: missing parameters in command-line: image/video/capture.\n");
+        if(model_inputs_bool == false)
+            printf("\nERROR: missing parameters in command-line: model input dimensions (c,h,w).\n");
+        if(model_outputs_bool == false)
+            printf("\nERROR: missing parameters in command-line: model output dimensions (c,h,w).\n");
         show_usage();
         status = -1;
         exit(status);
@@ -348,14 +383,12 @@ int main(int argc, const char ** argv)
     }
 
     // create output tensor prob
-    vx_size dims_prob_data[4] = { 1, 1, vx_size(modelOutput), 1 };
+    vx_size dims_prob_data[4] = { vx_size(output_w), vx_size(output_h), vx_size(output_c), 1 };
     vx_tensor output_prob_tensor = vxCreateTensor(context, 4, dims_prob_data, VX_TYPE_FLOAT32, 0);
     if(vxGetStatus((vx_reference)output_prob_tensor)) {
         printf("ERROR: vxCreateTensor() failed for prob\n");
         return -1;
     }
-    
-
     // build graph using annmodule
     int64_t freq = clockFrequency(), t0, t1;
     char modelWeights[1024];
@@ -365,16 +398,16 @@ int main(int argc, const char ** argv)
     // create model graph
     t0 = clockCounter();
     if(modelWeights_str != "empty"){
-    	status = annAddToGraph(model_graph, input_data_tensor, output_prob_tensor, modelWeights);
-	    if(status) {
-	        printf("ERROR: Model annAddToGraph() failed (%d)\n", status);
-	        return -1;
-	    }
-	    status = vxVerifyGraph(model_graph);
-	    if(status) {
-	        printf("ERROR: Model vxVerifyGraph(...) failed (%d)\n", status);
-	        return -1;
-	    }
+        status = annAddToGraph(model_graph, input_data_tensor, output_prob_tensor, modelWeights);
+        if(status) {
+            printf("ERROR: Model annAddToGraph() failed (%d)\n", status);
+            return -1;
+        }
+        status = vxVerifyGraph(model_graph);
+        if(status) {
+            printf("ERROR: Model vxVerifyGraph(...) failed (%d)\n", status);
+            return -1;
+        }
         runModel = true;
     } 
     t1 = clockCounter();
@@ -406,166 +439,142 @@ int main(int argc, const char ** argv)
         printf("OK: NN Model took %.3f msec (average over %d iterations)\n", (float)(t1-t0)*1000.0f/(float)freq/(float)N, N);
     }
 
-    /***** OPENCV Additions *****/
+    /*****Additions for classification****/
+    Classifier *mClassifier = new Classifier;
+    float *outputBuffer;
+    outputBuffer = new float[output_c];
 
-    // create display windows
-    cv::namedWindow(MIVisionX_LEGEND);
-    cvui::init(MIVisionX_LEGEND);
-    cv::namedWindow(MIVisionX_DISPLAY, cv::WINDOW_GUI_EXPANDED);
-
-    // probability track bar threshold default
-    threshold_slider = 50;
+    /*****Additions for object detection****/
+    Region *mRegion = new Region;
+    float nms = 0.4;
+    int targetBlockwd = 13;
+    std::vector<DetectedObject> results;
+    int confidence = 0.2;
+    float threshold_detect = 0.18;
     
-    // create display legend image
-    modelTime_g = modelTime;
-    createLegendImage(NN_ModelName);
+    /*****Additions for segmentation****/
+    Segment *mSegment = new Segment;
+    int pipelineDepth = 2;
+    int total_size = 2048*1024*19*1;
+    int input_dims[4]={0};
+    input_dims[0] = 1; input_dims[1] = 19;
+    input_dims[2] = 1024; input_dims[3] = 2048;
+    std::thread pipeLineThread[pipelineDepth];
+    cv::Mat inputFrame[pipelineDepth];
+    cv::Mat maskImage[pipelineDepth];
 
-    // define variables for run
-    cv::Mat frame;
     int outputImgWidth = 1080, outputImgHeight = 720;
-    float threshold = 0.01;
+    cv::Size input_geometry = cv::Size(input_dims[3], input_dims[2]);
     cv::Size output_geometry = cv::Size(outputImgWidth, outputImgHeight);
-    Mat inputDisplay, outputDisplay;  
-
-    cv::Mat inputFrame_299x299, inputFrame_data_resized;
-    int fontFace = CV_FONT_HERSHEY_DUPLEX;
-    double fontScale = 1;
-    int thickness = 1.5;
-    float *outputBuffer[1];
-    for(int models = 0; models < 1; models++){
-        outputBuffer[models] = new float[modelOutput];
+    float *outputBuffer_seg[pipelineDepth];
+    unsigned char *classIDBuf[pipelineDepth];
+    float *prob[pipelineDepth];
+    for(int p = 0; p < pipelineDepth; p++){
+        outputBuffer_seg[p] = new float[total_size];
+        classIDBuf[p] = new unsigned char[1024 * 2048];
+        prob[p] = new float[1024 * 2048];
+        maskImage[p].create(input_geometry, CV_8UC3);
     }
 
+    double alpha = 0.8, beta;
+    beta = ( 1.0 - alpha );
+
+    cv::Mat inputDisplay, outputDisplay, maskDisplay;
+
+    // Time per frame
+    modelTime_g = modelTime;
+
+    // define variables for run
+    cv::Mat frame, img_cp;
+    cv::Mat inputFrame_data_resized;
     int loopSeg = 1;
-
-    while(argc && loopSeg)
+    
+    //mode - image
+    if(imageFileInput == true)
     {
-        VideoCapture cap;
-        if (captureFromVideo) {
-            cap.open(videoFile);
-            if(!cap.isOpened()) {
-                std::cout << "Unable to open the video: " << videoFile << std::endl;
-                return 0;
-            }
+        frame = cv::imread(imageFile);
+        if (frame.empty()) {
+            std::cout << "Unable to open the image: " << imageFile << std::endl;
+            exit(1);
         }
-        else {
-            cap.open(captureID);
-            if(!cap.isOpened()) {
-                std::cout << "Unable to open the camera feed: " << captureID << std::endl;
-                return 0;
-            }
-        }
+        img_cp = frame.clone();
+        cv::resize(frame, inputFrame_data_resized, cv::Size(input_w,input_h));
 
-        int frameCount = 0;
-        float msFrame = 0, fpsAvg = 0, frameMsecs = 0;
-        for(;;)
+        vx_enum usage = VX_WRITE_ONLY;
+        vx_enum data_type = VX_TYPE_FLOAT32;
+        vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+        vx_map_id map_id;
+        float * ptr;
+        vx_size count;
+
+        // copy - image tensor
+        if(runModel)
         {
-            msFrame = 0;
-            // capture image frame
-            t0 = clockCounter();
-            cap >> frame;
-            if( frame.empty() ) break; // end of video stream
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("\n\nLIVE: OpenCV Frame Capture Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+            vxQueryTensor(input_data_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+            vxQueryTensor(input_data_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+            vxQueryTensor(input_data_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+            if(data_type != VX_TYPE_FLOAT32) {
+                std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for " <<  std::endl;
+                return -1;
+            }
+            count = dims[0] * dims[1] * dims[2] * dims[3];
 
-            // preprocess image frame
-            t0 = clockCounter();
-            cv::resize(frame, inputFrame_data_resized, cv::Size(input_h,input_w));
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("LIVE: OpenCV Frame Resize Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+            vx_status status = vxMapTensorPatch(input_data_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+            if(status) {
+                std::cerr << "ERROR: vxMapTensorPatch() failed for " <<  std::endl;
+                return -1;
+            }
 
-            // Copy Image frame into the input tensor
-            t0 = clockCounter();
-            vx_enum usage = VX_WRITE_ONLY;
-            vx_enum data_type = VX_TYPE_FLOAT32;
-            vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
-            vx_map_id map_id;
-            float * ptr;
-            vx_size count;
-
-            // copy - 224x224 image tensor
-            if(runModel)
-            {
-                vxQueryTensor(input_data_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
-                vxQueryTensor(input_data_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
-                vxQueryTensor(input_data_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
-                if(data_type != VX_TYPE_FLOAT32) {
-                    std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for " <<  std::endl;
-                    return -1;
+            cv::Mat srcImg;
+            float *dstR, *dstG, *dstB;
+            for(size_t n = 0; n < dims[3]; n++) {
+                srcImg = inputFrame_data_resized;
+                if (dims[2] == 1) {
+                    cv::cvtColor(srcImg, srcImg, CV_BGR2GRAY);
                 }
-                count = dims[0] * dims[1] * dims[2] * dims[3];
-
-                vx_status status = vxMapTensorPatch(input_data_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
-                if(status) {
-                    std::cerr << "ERROR: vxMapTensorPatch() failed for " <<  std::endl;
-                    return -1;
-                }
-                Mat srcImg;
-                float *dstR, *dstG, *dstB;
-                for(size_t n = 0; n < dims[3]; n++) {
-                    srcImg = inputFrame_data_resized;
-                    if (dims[2] == 1) {
-                        cv::cvtColor(srcImg, srcImg, CV_BGR2GRAY);
+                for(vx_size y = 0; y < dims[1]; y++) {
+                    unsigned char * src = srcImg.data + y*dims[0]*dims[2];
+                    dstR = ptr + ((n * stride[3] + y * stride[1]) >> 2);
+                    if (dims[2] == 3) {
+                        dstG = dstR + (stride[2] >> 2);
+                        dstB = dstG + (stride[2] >> 2);
                     }
-                    for(vx_size y = 0; y < dims[1]; y++) {
-                        unsigned char * src = srcImg.data + y*dims[0]*dims[2];
-                        dstR = ptr + ((n * stride[3] + y * stride[1]) >> 2);
-                        if (dims[2] == 3) {
-                            dstG = dstR + (stride[2] >> 2);
-                            dstB = dstG + (stride[2] >> 2);
+                    for(vx_size x = 0; x < dims[0]; x++, src += dims[2]) {
+                        if(dims[2] == 3)
+                        {
+                            *dstR++ = (src[2] * Mx) + Ax;
+                            *dstG++ = (src[1] * My) + Ay;
+                            *dstB++ = (src[0] * Mz) + Az;
                         }
-                        for(vx_size x = 0; x < dims[0]; x++, src += dims[2]) {
-                            if(input_w != 299) {
-                                if(dims[2] == 3) {
-                                    *dstR++ = src[2];
-                                    *dstG++ = src[1];
-                                    *dstB++ = src[0];
-                                }
-                                else if (dims[2] == 1) {
-                                    *dstR++ = src[0];
-                                }
-                            }
-                            else{
-                                if(dims[2] == 3) {
-                                    *dstR++ = (src[2] * 0.007843137) - 1;
-                                    *dstG++ = (src[1] * 0.007843137) - 1;
-                                    *dstB++ = (src[0] * 0.007843137) - 1;
-                                }
-                                else if (dims[2] == 1) {
-                                    *dstR++ = (src[0] * 0.007843137) - 1;
-                                }
-                            }
+                        else if(dims[2] == 1)
+                        {
+                            *dstR++ = (src[2] * Mx) + Ax;
                         }
                     }
                 }
-                status = vxUnmapTensorPatch(input_data_tensor, map_id);
-                if(status) {
-                    std::cerr << "ERROR: vxUnmapTensorPatch() failed for " <<  std::endl;
-                    return -1;
-                }
             }
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("LIVE: Convert Image to Tensor Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
-   
-            // process graph for the input           
-            if(runModel)
-            {
-                t0 = clockCounter();
-                status = vxProcessGraph(model_graph);
-                if(status != VX_SUCCESS) break;
-                t1 = clockCounter();
-                modelTime_g = (float)(t1-t0)*1000.0f/(float)freq;
-                msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-                //printf("LIVE: Process Resnet50 Classification Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+            status = vxUnmapTensorPatch(input_data_tensor, map_id);
+            if(status) {
+                std::cerr << "ERROR: vxUnmapTensorPatch() failed for " <<  std::endl;
+                return -1;
             }
-
-            // copy output data into local buffer
+        }
+        
+        // process graph for the input           
+        if(runModel)
+        {
             t0 = clockCounter();
-            usage = VX_READ_ONLY;
-            if(runModel)
+            status = vxProcessGraph(model_graph);
+            if(status != VX_SUCCESS) std::cerr << "ERROR: vxProcessGraph() failed"  << std::endl;;
+            t1 = clockCounter();
+            modelTime_g = (float)(t1-t0)*1000.0f/(float)freq;
+            //printf("LIVE: Process Resnet50 Classification Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+        }
+            
+        usage = VX_READ_ONLY;
+        if(runModel)
+        {
+            if(modeType == "1" or modeType == "classification")
             {
                 vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
                 vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
@@ -580,77 +589,372 @@ int main(int argc, const char ** argv)
                     std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
                     return -1;
                 }
-                memcpy(outputBuffer[0], ptr, (count*sizeof(float)));
+                memcpy(outputBuffer, ptr, (count*sizeof(float)));
+                status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+                if(status) {
+                    std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+                    return -1;
+                }   
+
+                mClassifier->visualize(img_cp, output_c, outputBuffer, NN_ModelName, labelText, modelTime_g);
+                cv::waitKey(0);
+            }
+            else if(modeType == "2" or modeType == "detection")
+            {
+                vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+                vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+                vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+                if(data_type != VX_TYPE_FLOAT32) {
+                    std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+                    return -1;
+                }
+                count = dims[0] * dims[1] * dims[2] * dims[3];
+                status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+                if(status) {
+                    std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+                    return -1;
+                }
+
+                //call detect function for boxes!!
+                mRegion->GetDetections(ptr, (int)output_c, (int)output_h, (int)output_w, classes, frame.cols, frame.rows, threshold_detect, nms, targetBlockwd, results, labelText);
+
                 status = vxUnmapTensorPatch(output_prob_tensor, map_id);
                 if(status) {
                     std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
                     return -1;
                 }
+                Visualize *mVisualize = new Visualize(img_cp, confidence, results);
+                mVisualize->show();
+                mVisualize->LegendImage(labelText);
+                cv::waitKey(0);
+                delete mVisualize;
             }
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("LIVE: Copy probability Output Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
 
-            // process probabilty
-            t0 = clockCounter();
-            threshold = (float)thresholdValue;
-            const int N = modelOutput;
-            int resnetID;
-            if(runModel)
+            else if (modeType == "3" or modeType == "segmentation")
             {
-                resnetID = std::distance(outputBuffer[0], std::max_element(outputBuffer[0], outputBuffer[0] + N));
+            	int pipelinePointer = 0;
+            	usage = VX_READ_ONLY;
+                vx_enum data_type = VX_TYPE_FLOAT32;
+			    vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+			    vx_map_id map_id;
+			    float * ptr;
+			    vx_size count;
+			    vx_enum usage = VX_READ_ONLY;
+			    vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+			    vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+			    vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+			    if(data_type != VX_TYPE_FLOAT32) {
+			        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+			    }
+			    count = dims[0] * dims[1] * dims[2] * dims[3];
+			    vx_status status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+			    if(status) {
+			        std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+			    }
+			    memcpy(outputBuffer_seg[pipelinePointer], ptr, (count*sizeof(float)));
+			    status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+			    if(status) {
+			        std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+			    }
+                if(runModel)
+                {
+                   mSegment->getMaskImage(input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer]);
+                }
+                cv::resize(inputFrame[pipelinePointer], inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
+		        cv::resize(maskImage[pipelinePointer], maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
+		        cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
+		        cv::imshow("Input Image", inputDisplay);
+		        cv::imshow("Mask Image", maskDisplay);
+		        cv::imshow("Merged Image", outputDisplay );
+		        if( cv::waitKey(2) == 27 ){ exit(1); }
             }
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("LIVE: Get Classification ID Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
-
-            // Write Output on Image
-            t0 = clockCounter();
-            cv::resize(frame, outputDisplay, cv::Size(outputImgWidth,outputImgHeight));
-            int l = 1;
-            std::string modelName = NN_ModelName + " -- ";
-            std::string modelText = "Unclassified";
-            if(outputBuffer[0][resnetID] >= threshold){ modelText = labelText[resnetID]; }
-
-            modelName = modelName + modelText;
-            int red, green, blue;
-            if(runModel && modelWeights_str != "empty")
-            {
-                red = 255; green = 0; blue = 0;
-                putText(outputDisplay, modelName, Point(20, (l * 40) + 30), fontFace, fontScale, Scalar(blue,green,red), thickness,8);
-                l++;
-            }
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("LIVE: Resize and write on Output Image Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
-   
-            // display img time
-            t0 = clockCounter();
-            cv::imshow(MIVisionX_DISPLAY, outputDisplay);
-            createLegendImage(NN_ModelName);
-            t1 = clockCounter();
-            msFrame += (float)(t1-t0)*1000.0f/(float)freq;
-            //printf("LIVE: Output Image Display Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
-
-            // calculate FPS
-            //printf("LIVE: msec for frame -- %.3f msec\n", (float)msFrame);
-            frameMsecs += msFrame;
-            if(frameCount && frameCount%10 == 0){
-                printf("FPS LIVE: Avg FPS -- %d\n", (int)((ceil)(1000/(frameMsecs/10))));
-                frameMsecs = 0;
-            }
-
-            // wait to close live inference application
-            if( waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
-            else if( waitKey(2) == 82 ){ break; } // for restart pressing R
-
-            frameCount++;
         }
     }
+    //mode - video/ live capture
+    else
+    {
+        while(argc && loopSeg)
+        {
+            cv::VideoCapture cap;
+            if (captureFromVideo) {
+                cap.open(videoFile);
+                if(!cap.isOpened()) {
+                    std::cout << "Unable to open the video: " << videoFile << std::endl;
+                    return 0;
+                }
+            }
+            else {
+                cap.open(captureID);
+                if(!cap.isOpened()) {
+                    std::cout << "Unable to open the camera feed: " << captureID << std::endl;
+                    return 0;
+                }
+            }
 
+            int frameCount = 0;
+            float msFrame = 0, fpsAvg = 0, frameMsecs = 0;
+            int pipelinePointer = -1;
+
+            for(;;)
+            {
+                if(modeType == "3" or modeType == "segmentation")
+                {
+                    // find pipeline pointer number as a variable of pipeline depth
+                    if((frameCount%pipelineDepth) == 0) 
+                        pipelinePointer = 0; 
+                    else 
+                        pipelinePointer = 1;
+                }
+
+                msFrame = 0;
+                // capture image frame
+                t0 = clockCounter();
+                cap >> frame;
+                img_cp = frame.clone();
+                if( frame.empty() ) break; // end of video stream
+                t1 = clockCounter();
+                msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                //printf("\n\nLIVE: OpenCV Frame Capture Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+
+                // preprocess image frame
+                t0 = clockCounter();
+                if(modeType == "1" or modeType == "classification" or modeType == "2" or modeType == "detection")
+
+                    cv::resize(frame, inputFrame_data_resized, cv::Size(input_h,input_w));
+                else if(modeType == "3" or modeType == "segmentation")
+                     cv::resize(frame, inputFrame[pipelinePointer], cv::Size(2048,1024));
+
+                t1 = clockCounter();
+                msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                //printf("LIVE: OpenCV Frame Resize Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+
+                // Copy Image frame into the input tensor
+                t0 = clockCounter();
+                vx_enum usage = VX_WRITE_ONLY;
+                vx_enum data_type = VX_TYPE_FLOAT32;
+                vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+                vx_map_id map_id;
+                float * ptr;
+                vx_size count;
+
+                // copy - 224x224 image tensor
+                if(runModel)
+                {
+                    vxQueryTensor(input_data_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+                    vxQueryTensor(input_data_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+                    vxQueryTensor(input_data_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+                    if(data_type != VX_TYPE_FLOAT32) {
+                        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for " <<  std::endl;
+                        return -1;
+                    }
+                    count = dims[0] * dims[1] * dims[2] * dims[3];
+
+                    vx_status status = vxMapTensorPatch(input_data_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+                    if(status) {
+                        std::cerr << "ERROR: vxMapTensorPatch() failed for " <<  std::endl;
+                        return -1;
+                    }
+                    cv::Mat srcImg;
+                    float *dstR, *dstG, *dstB;
+                    for(size_t n = 0; n < dims[3]; n++) {
+                        if(modeType == "1" or modeType == "classification" or modeType == "2" or modeType == "detection")
+
+                            srcImg = inputFrame_data_resized;
+                        else if(modeType == "3" or modeType == "segmentation")
+                             srcImg = inputFrame[pipelinePointer];
+
+                        if (dims[2] == 1) {
+                            cv::cvtColor(srcImg, srcImg, CV_BGR2GRAY);
+                        }
+                        for(vx_size y = 0; y < dims[1]; y++) {
+                            unsigned char * src = srcImg.data + y*dims[0]*dims[2];
+                            dstR = ptr + ((n * stride[3] + y * stride[1]) >> 2);
+                            if (dims[2] == 3) {
+                                dstG = dstR + (stride[2] >> 2);
+                                dstB = dstG + (stride[2] >> 2);
+                            }
+                            for(vx_size x = 0; x < dims[0]; x++, src += dims[2]) {
+                                   if(dims[2] == 3)
+                                    {
+                                        *dstR++ = (src[2] * Mx) + Ax;
+                                        *dstG++ = (src[1] * My) + Ay;
+                                        *dstB++ = (src[0] * Mz) + Az;
+                                    }
+                                    else if(dims[2] == 1)
+                                    {
+                                        *dstR++ = (src[2] * Mx) + Ax;
+                                    }
+                            }
+                        }
+                    }
+                    status = vxUnmapTensorPatch(input_data_tensor, map_id);
+                    if(status) {
+                        std::cerr << "ERROR: vxUnmapTensorPatch() failed for " <<  std::endl;
+                        return -1;
+                    }
+                }
+                t1 = clockCounter();
+                msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                //printf("LIVE: Convert Image to Tensor Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+       
+                // process graph for the input           
+                if(runModel)
+                {
+                    t0 = clockCounter();
+                    status = vxProcessGraph(model_graph);
+                    if(status != VX_SUCCESS) break;
+                    t1 = clockCounter();
+                    modelTime_g = (float)(t1-t0)*1000.0f/(float)freq;
+                    msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                    //printf("LIVE: Process Resnet50 Classification Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+                }
+
+                if(modeType == "1" or modeType == "classification")
+                {   // copy output data into local buffer
+                    t0 = clockCounter();
+                    usage = VX_READ_ONLY;
+                    if(runModel)
+                    {
+                        vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+                        vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+                        vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+                        if(data_type != VX_TYPE_FLOAT32) {
+                            std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+                            return -1;
+                        }
+                        count = dims[0] * dims[1] * dims[2] * dims[3];
+                        status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+                        if(status) {
+                            std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+                            return -1;
+                        }
+                        memcpy(outputBuffer, ptr, (count*sizeof(float)));
+                        status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+                        if(status) {
+                            std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+                            return -1;
+                        }
+                    }
+                    t1 = clockCounter();
+                    msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                    //printf("LIVE: Copy probability Output Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+        
+                    // visualize the classification output
+                    t0 = clockCounter();
+                    mClassifier->visualize(img_cp, output_c, outputBuffer, NN_ModelName, labelText, modelTime_g);
+                    t1 = clockCounter();
+                    msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                    //printf("LIVE: Get Classification Results Time -- %.3f msec\n", (float)(t1-t0)*1000.0f/(float)freq);
+                }
+                else if(modeType == "2" or modeType == "detection")
+                {  
+                    t0 = clockCounter();
+                    usage = VX_READ_ONLY;
+                    if(runModel)
+                    {
+                        vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+                        vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+                        vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+                        if(data_type != VX_TYPE_FLOAT32) {
+                            std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+                            return -1;
+                        }
+                        count = dims[0] * dims[1] * dims[2] * dims[3];
+                        status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+                        if(status) {
+                            std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+                            return -1;
+                        }
+                        
+                        //call detect function for boxes!!
+                        mRegion->GetDetections(ptr, (int)output_c, (int)output_h, (int)output_w, classes, frame.cols, frame.rows, threshold_detect, nms, targetBlockwd, results, labelText);
+
+                        status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+                        if(status) {
+                            std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+                            return -1;
+                        }
+                        Visualize *mVisualize = new Visualize(img_cp, confidence, results);
+                        mVisualize->show();
+                        mVisualize->LegendImage(labelText);
+                        delete mVisualize;
+                    }
+                    t1 = clockCounter();
+                    msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                }
+
+                else if(modeType == "3" or modeType == "segmentation")
+                {
+
+                    t0 = clockCounter();
+                    usage = VX_READ_ONLY;
+                    vx_enum data_type = VX_TYPE_FLOAT32;
+				    vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+				    vx_map_id map_id;
+				    float * ptr;
+				    vx_size count;
+				    vx_enum usage = VX_READ_ONLY;
+				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+				    vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+				    if(data_type != VX_TYPE_FLOAT32) {
+				        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+				    }
+				    count = dims[0] * dims[1] * dims[2] * dims[3];
+				    vx_status status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+				    if(status) {
+				        std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+				    }
+				    memcpy(outputBuffer_seg[pipelinePointer], ptr, (count*sizeof(float)));
+				    status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+				    if(status) {
+				        std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+				    }
+                    if(runModel)
+                    {
+                       mSegment->getMaskImage(input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer]);
+                    }
+                    cv::resize(inputFrame[pipelinePointer], inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
+			        cv::resize(maskImage[pipelinePointer], maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
+			        cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
+			        cv::imshow("Input Image", inputDisplay);
+			        cv::imshow("Mask Image", maskDisplay);
+			        cv::imshow("Merged Image", outputDisplay );
+
+
+                    t1 = clockCounter();
+                    msFrame += (float)(t1-t0)*1000.0f/(float)freq;
+                }
+
+
+                // calculate FPS
+                //printf("LIVE: msec for frame -- %.3f msec\n", (float)msFrame);
+                frameMsecs += msFrame;
+                if(frameCount && frameCount%10 == 0){
+                    printf("FPS LIVE: Avg FPS -- %d\n", (int)((ceil)(1000/(frameMsecs/10))));
+                    frameMsecs = 0;
+                }
+
+                // wait to close live inference application
+                if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
+                else if( cv::waitKey(2) == 82 ){ break; } // for restart pressing R
+
+                frameCount++;
+            }  
+        }
+    }
+   
+    
     // release resources
-    for(int models = 0; models < 1; models++){
-        delete outputBuffer[models];
+    
+    delete [] outputBuffer;   
+    delete mRegion;
+    delete mClassifier;
+    delete mSegment;
+    for(int p = 0; p < pipelineDepth; p++){
+        delete outputBuffer_seg[p];
+        delete classIDBuf[p];
+        delete prob[p];
     }
     // release input data
     ERROR_CHECK_STATUS(vxReleaseTensor(&input_data_tensor));

@@ -41,11 +41,18 @@ include_directories(include)
 link_directories(/opt/rocm/mivisionx/lib)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
-
+list(APPEND SOURCES
+	source/region.cpp
+	source/visualize.cpp
+	source/common.cpp 
+	source/classification.cpp
+    source/classifier.cpp
+	source/segmentation.cpp)
+	
 add_library(caffeModels SHARED source/annmodule.cpp)
 target_link_libraries(caffeModels openvx vx_nn pthread)
 
-add_executable(classifier source/classifier.cpp)
+add_executable(classifier  ${SOURCES})
 target_compile_definitions(classifier PUBLIC ENABLE_OPENCV=1)
 target_link_libraries(classifier openvx vx_nn caffeModels ${OpenCV_LIBRARIES}  pthread)
 
