@@ -1,4 +1,5 @@
 #include "segmentation.h"
+#include "cvui.h"
 // source: adapted from cityscapes-dataset.org
 
 unsigned char overlayColors[20][3] = {
@@ -168,6 +169,25 @@ void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classI
 
 
     for(int i = 0 ; i < numthreads ; i++){ M[i].join() ; }
-    
+    for(int i = 0 ; i < numthreads ; i++){ M[i].join() ; }
+    // create legend image
+    int fontFace = CV_FONT_HERSHEY_PLAIN;
+    double fontScale = 1;
+    int thickness = 1.2;
+    cv::Size legendGeometry = cv::Size(325, (20 * 25) + 25);
+    cv::Mat legend = cv::Mat::zeros(legendGeometry,CV_8UC3);
+    cv::Rect roi = cv::Rect(0,0,325,(20 * 25) + 25);
+    legend(roi).setTo(cv::Scalar(255,255,255));
+    int l;
+    for (l = 0; l < 20; l ++){
+        int red, green, blue;
+        red = (overlayColors[l][2]) ;
+        green = (overlayColors[l][1]) ;
+        blue = (overlayColors[l][0]) ;
+        std::string className = segmentationClasses[l];
+        putText(legend, className, cv::Point(5, (l * 25) + 17), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
+        rectangle(legend, cv::Point(125, (l * 25)) , cv::Point(300, (l * 25) + 25), cv::Scalar(red,green,blue),-1);
+    }
+    cv::imshow("Legend", legend);
     return;
 }
