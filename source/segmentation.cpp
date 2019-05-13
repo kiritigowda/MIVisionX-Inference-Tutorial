@@ -169,7 +169,6 @@ void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classI
 
 
     for(int i = 0 ; i < numthreads ; i++){ M[i].join() ; }
-    for(int i = 0 ; i < numthreads ; i++){ M[i].join() ; }
     // create legend image
     int fontFace = CV_FONT_HERSHEY_PLAIN;
     double fontScale = 1;
