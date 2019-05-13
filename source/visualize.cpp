@@ -9,6 +9,7 @@ Visualize::Visualize(Mat &image, int confidence, vector<DetectedObject> &results
 		printf("Image not found\n");
 		exit(1);
 	}
+	cv::namedWindow(MIVisionX_DISPLAY_D, cv::WINDOW_GUI_EXPANDED);
 };
 
 Visualize::~Visualize() {};
@@ -43,12 +44,11 @@ void Visualize::show() {
 		}
 	}
 	resize(img_cp, img_cp, Size(mImage.cols, mImage.rows));
-	imshow("MIVisionX Object Detection - Display", mImage);
+	imshow(MIVisionX_DISPLAY_D, mImage);
 
 }
 
 void Visualize::LegendImage(std::string labelText[]) {
-	string window_name = "MIVisionX Object Detection - Legend";
 
 	Size legendGeometry = Size(325, (20 * 40) + 40);
 	Mat legend = Mat::zeros(legendGeometry, CV_8UC3);
@@ -61,7 +61,7 @@ void Visualize::LegendImage(std::string labelText[]) {
 		putText(legend, className, Point(20, (l * 40) + 30), CV_FONT_HERSHEY_SIMPLEX, 0.6, Scalar(0, 0, 0), 1, 8);
 		rectangle(legend, Point(225, (l * 40)), Point(300, (l * 40) + 40), clr, -1);
 	}
-	imshow(window_name, legend);
+	imshow(MIVisionX_LEGEND_D, legend);
 
 	return;
 }

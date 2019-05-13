@@ -5,6 +5,10 @@
 #include "common.h"
 #include "vx_ext_opencv.h"
 
+// Name Output Display Windows
+#define MIVisionX_LEGEND_D    "MIVisionX Image Detection"
+#define MIVisionX_DISPLAY_D   "MIVisionX Image Detection - Display"
+
 static const int colors[20][3] = {
 			{160,82,45},        // aeroplane
 			{128,0,0},          // bicycle
@@ -27,30 +31,6 @@ static const int colors[20][3] = {
 			{124,252,0},        // train
 			{199,21,133}        // tvmonitor
 };
-
-/*static const std::string yoloClasses[20] = {
-			"aeroplane",
-			"bicycle",
-			"bird",
-			"boat",
-			"bottle",
-			"bus",
-			"car",
-			"cat",
-			"chair",
-			"cow",
-			"dining table",
-			"dog",
-			"horse",
-			"motorbike",
-			"person",
-			"potted plant",
-			"sheep",
-			"sofa",
-			"train",
-			"tvmonitor"
-};
-*/
 
 class Visualize {
 public:

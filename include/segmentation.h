@@ -12,7 +12,12 @@
 
 #include "vx_ext_opencv.h"
 
-
+// Name Output Display Windows
+#define MIVisionX_LEGEND_S      "MIVisionX Image Segmentation"
+#define MIVisionX_LEGEND_S_T    "MIVisionX Image Segmentation - Threshold"
+#define MIVisionX_DISPLAY_S_I   "MIVisionX Image Segmentation - Input"
+#define MIVisionX_DISPLAY_S_M   "MIVisionX Image Segmentation - MASK"
+#define MIVisionX_DISPLAY_S_O   "MIVisionX Image Segmentation - Merged"
 
 class Segment
 {

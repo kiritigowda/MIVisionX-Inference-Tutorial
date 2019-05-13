@@ -24,6 +24,7 @@ unsigned char overlayColors[20][3] = {
     {  0,  0,230},      // motorcycle
     {119, 11, 32}       // bicycle
 };
+
 // source: adapted from cityscapes-dataset.org
 std::string segmentationClasses[20] = {
     "Unclassified",
@@ -47,6 +48,7 @@ std::string segmentationClasses[20] = {
     "motorcycle",
     "bicycle"
 };
+
 Segment::Segment()
 {
     initialized = false;
@@ -73,14 +75,9 @@ void Segment::initialize(std::string labelText[])
     threshold_slider_max = 100;
     threshold_slider = 50;
     thresholdValue = 0.5;
-    cv::namedWindow("MIVision Image Segmentation");
-    cv::namedWindow("MIVision Image Segmentation - Input Image", cv::WINDOW_GUI_EXPANDED);
-    cv::namedWindow("MIVision Image Segmentation - Mask Image",cv::WINDOW_GUI_EXPANDED);
-    cv::namedWindow("MIVision Image Segmentation - Merged Image",cv::WINDOW_GUI_EXPANDED);
 
-
-    cv::createTrackbar("Probability Threshold", "MIVision Image Segmentation", &threshold_slider, threshold_slider_max, &Segment::threshold_on_trackbar);
-    cv::createTrackbar("Blend alpha", "MIVision Image Segmentation", &alpha_slider, alpha_slider_max, &Segment::alpha_on_trackbar);
+    cv::createTrackbar("Probability Threshold", MIVisionX_LEGEND_S, &threshold_slider, threshold_slider_max, &Segment::threshold_on_trackbar);
+    cv::createTrackbar("Blend alpha", MIVisionX_LEGEND_S, &alpha_slider, alpha_slider_max, &Segment::alpha_on_trackbar);
 
     initialized = true;
 }
@@ -167,7 +164,6 @@ void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classI
         M[i] = std::thread(&Segment::createMask, this, s, e, input_geometry.width, classImg, std::ref(maskImage)) ;
     }
 
-
     for(int i = 0 ; i < numthreads ; i++){ M[i].join() ; }
     // create legend image
     int fontFace = CV_FONT_HERSHEY_PLAIN;
@@ -187,6 +183,6 @@ void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classI
         putText(legend, className, cv::Point(5, (l * 25) + 17), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
         rectangle(legend, cv::Point(125, (l * 25)) , cv::Point(300, (l * 25) + 25), cv::Scalar(red,green,blue),-1);
     }
-    cv::imshow("Legend", legend);
+    cv::imshow(MIVisionX_LEGEND_S, legend);
     return;
 }

@@ -71,17 +71,18 @@ static void show_usage()
 { 
     printf(
             "\n"
-            "Usage: ./classifier \n"
-            "--mode          <1:classification 2:detetction 3:segmentation [required]\n"
-            "--video <video file>/--capture <0>/--image <image file>        [required]\n"
-            "--model_weights   <model-weights.bin>      [required]\n"    
-            "--label           <label text>             [required]\n"
-            "--model_inputs  <c,h,w>      [required]\n"
-            "--model_outputs <c,h,w>      [required]\n\n"
-            "--model_name    <model name> [optional - default:NN_ModelName]\n"
-            "--add <Ax,Ay,Az>             [optional - default:0,0,0]\n"
-            "--multiply <Mx,My,Mz>        [optional - default:1,1,1]\n"
-            "[options] --help/--h\n"   
+            "Usage:\n\n"
+            "./classifier"
+            "\t--mode\t\t\t\t<1/2/3 - 1:classification 2:detetction 3:segmentation>\t[required]\n"
+            "\t\t--video/--capture/--image\t<video file>/<0>/<image file>\t\t\t\t[required]\n"
+            "\t\t--model_weights\t\t\t<model_weights.bin>\t\t\t\t\t[required]\n"    
+            "\t\t--label\t\t\t\t<label text>\t\t\t\t\t\t[required]\n"
+            "\t\t--model_inputs\t\t\t<c,h,w - channel,height,width>\t\t\t\t[required]\n"
+            "\t\t--model_outputs\t\t\t<c,h,w - channel,height,width>\t\t\t\t[required]\n\n"
+            "\t\t--model_name\t\t\t<model name>\t\t\t\t\t[optional - default:NN_ModelName]\n"
+            "\t\t--add\t\t\t\t<Ax,Ay,Az - input preprocessing factor>\t\t[optional - default:0,0,0]\n"
+            "\t\t--multiply\t\t\t<Mx,My,Mz - input preprocessing factor>\t\t[optional - default:1,1,1]\n\n"
+            "\n[usage help]\t--help/--h\n"   
             "\n"
         );
 }
@@ -97,7 +98,7 @@ int main(int argc, const char ** argv)
     std::string modelInputs = "empty";
     std::string modelOutputs = "empty";
     std::string NN_ModelName = "NN-Model";
-    std::string labelText[1000];
+    std::string labelText[10000];
     std::string preprocessAdd = "empty";
     std::string preprocessMultiply = "empty";
 
@@ -338,17 +339,17 @@ int main(int argc, const char ** argv)
     if (parameter < 6)
     {
         if(modeType_bool == false)
-            printf("\nERROR: missing parameters in command-line: mode name/type.\n");
+            printf("\nERROR: missing parameter in command-line: mode type.\n");
         if(model_weights_bool == false)
-            printf("\nERROR: missing parameters in command-line: model weights.\n");
+            printf("\nERROR: missing parameter in command-line: model weights.\n");
         if(label_bool == false)
-            printf("\nERROR: missing parameters in command-line: label file.\n");
+            printf("\nERROR: missing parameter in command-line: label file.\n");
         if(runType_bool == false)
-            printf("\nERROR: missing parameters in command-line: image/video/capture.\n");
+            printf("\nERROR: missing parameter in command-line: image/video/capture.\n");
         if(model_inputs_bool == false)
-            printf("\nERROR: missing parameters in command-line: model input dimensions (c,h,w).\n");
+            printf("\nERROR: missing parameter in command-line: model input dimensions (c,h,w).\n");
         if(model_outputs_bool == false)
-            printf("\nERROR: missing parameters in command-line: model output dimensions (c,h,w).\n");
+            printf("\nERROR: missing parameter in command-line: model output dimensions (c,h,w).\n");
         show_usage();
         status = -1;
         exit(status);
@@ -453,6 +454,10 @@ int main(int argc, const char ** argv)
     float threshold_detect = 0.18;
     
     /*****Additions for segmentation****/
+    cv::namedWindow(MIVisionX_LEGEND_S);
+    cv::namedWindow(MIVisionX_DISPLAY_S_I,cv::WINDOW_GUI_EXPANDED);
+    cv::namedWindow(MIVisionX_DISPLAY_S_M,cv::WINDOW_GUI_EXPANDED);
+    cv::namedWindow(MIVisionX_DISPLAY_S_O,cv::WINDOW_GUI_EXPANDED);
     Segment *mSegment = new Segment;
     int pipelineDepth = 2;
     int total_size = 2048*1024*19*1;
@@ -663,9 +668,9 @@ int main(int argc, const char ** argv)
                 cv::resize(inputFrame[pipelinePointer], inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
 		        cv::resize(maskImage[pipelinePointer], maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
 		        cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
-		        cv::imshow("Input Image", inputDisplay);
-		        cv::imshow("Mask Image", maskDisplay);
-		        cv::imshow("Merged Image", outputDisplay );
+                cv::imshow(MIVisionX_DISPLAY_S_I, inputDisplay);
+                cv::imshow(MIVisionX_DISPLAY_S_M, maskDisplay);
+                cv::imshow(MIVisionX_DISPLAY_S_O, outputDisplay );
 		        if( cv::waitKey(2) == 27 ){ exit(1); }
             }
         }
@@ -917,9 +922,9 @@ int main(int argc, const char ** argv)
                     cv::resize(inputFrame[pipelinePointer], inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
 			        cv::resize(maskImage[pipelinePointer], maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
 			        cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
-			        cv::imshow("Input Image", inputDisplay);
-			        cv::imshow("Mask Image", maskDisplay);
-			        cv::imshow("Merged Image", outputDisplay );
+			        cv::imshow(MIVisionX_DISPLAY_S_I, inputDisplay);
+			        cv::imshow(MIVisionX_DISPLAY_S_M, maskDisplay);
+			        cv::imshow(MIVisionX_DISPLAY_S_O, outputDisplay );
 
 
                     t1 = clockCounter();
