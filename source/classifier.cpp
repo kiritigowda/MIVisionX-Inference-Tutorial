@@ -454,10 +454,13 @@ int main(int argc, const char ** argv)
     float threshold_detect = 0.18;
     
     /*****Additions for segmentation****/
-    cv::namedWindow(MIVisionX_LEGEND_S);
-    cv::namedWindow(MIVisionX_DISPLAY_S_I,cv::WINDOW_GUI_EXPANDED);
-    cv::namedWindow(MIVisionX_DISPLAY_S_M,cv::WINDOW_GUI_EXPANDED);
-    cv::namedWindow(MIVisionX_DISPLAY_S_O,cv::WINDOW_GUI_EXPANDED);
+    if (modeType == "3" or modeType == "segmentation"){
+        cv::namedWindow(MIVisionX_LEGEND_S);
+        cv::namedWindow(MIVisionX_DISPLAY_S_I,cv::WINDOW_GUI_EXPANDED);
+        cv::namedWindow(MIVisionX_DISPLAY_S_M,cv::WINDOW_GUI_EXPANDED);
+        cv::namedWindow(MIVisionX_DISPLAY_S_O,cv::WINDOW_GUI_EXPANDED);
+    }
+
     Segment *mSegment = new Segment;
     int pipelineDepth = 2;
     int total_size = 2048*1024*19*1;
