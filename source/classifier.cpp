@@ -462,10 +462,10 @@ int main(int argc, const char ** argv)
     /*****Additions for segmentation****/
     Segment *mSegment;
     int pipelineDepth = 2;
-    int total_size = 2048*1024*19*1;
+    int total_size = output_w*output_h*output_c*1;
     int input_dims[4]={0};
-    input_dims[0] = 1; input_dims[1] = 19;
-    input_dims[2] = 1024; input_dims[3] = 2048;
+    input_dims[0] = 1; input_dims[1] = output_c;
+    input_dims[2] = output_h; input_dims[3] = output_w;
     std::thread pipeLineThread[pipelineDepth];
     cv::Mat inputFrame[pipelineDepth];
     cv::Mat maskImage[pipelineDepth];
