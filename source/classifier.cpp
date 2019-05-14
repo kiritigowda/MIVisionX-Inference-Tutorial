@@ -927,10 +927,11 @@ int main(int argc, const char ** argv)
                 }
 
                 // wait to close live inference application
-                if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
-                if( cv::waitKey(1) == 32) { if(cv::waitKey(0) == 32) { continue; }}
-                if( cv::waitKey(1) == 82 ){ break; } // for restart pressing R
-
+                int key = cv::waitKey(1);
+                //if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
+                if((key & 255) == 27) { loopSeg = 0; break; }
+                if( (key & 255) == 32) { int key = cv::waitKey(0); if((key&255) == 32) { continue; }} //press space bar for pause/play frame
+                if( (key & 255) == 114 ){ break; } // for restart pressing R
                 frameCount++;
             }  
         }
