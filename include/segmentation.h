@@ -32,17 +32,19 @@ public:
 
     Segment();
 
-    void initialize(std::string labelText[]);
+    void initialize();
 
     static void threshold_on_trackbar( int threshold_slider_max, void* threshold_slider);
 
     static void alpha_on_trackbar( int threshold_slider_max, void* threshold_slider);
 
+    void createLegendImage(std::string labeltext[]);
+
     void findClassProb(size_t start , size_t end, int width, int height, int numClasses, float* output_layer, float threshold, float* prob, unsigned char* classImg);
 
     void createMask(size_t start , size_t end, int imageWidth, unsigned char* classImg, cv::Mat& maskImage);
 
-    void getMaskImage(int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage);
+    void getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage, std::string labelText[]);
 
 };
 
