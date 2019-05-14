@@ -127,9 +127,9 @@ Run classification on the live camera feed with this option.
 
 <p align="center"><img width="70%" src="images/modelTrainedFrameWorks.png" /></p>
 
-## Sample 1 - Claasification Using Pre-Trained Caffe Model
+## Sample 1 - Classification Using Pre-Trained Caffe Model
 
-### Run VGG 16 Classification on Live Video
+### Run VGG 16 on Live Video
 
 <p align="center"><img width="50%" src="images/app-control.png" /></p>
 
