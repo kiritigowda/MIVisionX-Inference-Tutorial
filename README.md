@@ -166,14 +166,22 @@ Run inference on the live camera feed with this option.
 	````
 	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py VGG16_NNIR VGG16_OpenVX
 	````
-
 	**Note:** 
-
 	* Copy annmodule.cpp & annmodule.h generated in VGG16_OpenVX into the module_files folder
-	* After copying the files, cmake & build this project
 	* Use weights.bin generated in VGG16_OpenVX folder for the classifier --model_weights option
 	
+* **Step 4:** Copy the annmodule.cpp & annmodule.h files into module_files folder. CMake and build this project
+
+	````
+	mkdir build
+	cd build
+	cmake ../
+	make
+	````
+	
 	<p align="center"><img width="50%" src="images/app_display.png" /></p>
+	
+* **Step 5:** Use the command below to run the classifier
 
 ```
 ./classifier 	--mode 1
@@ -184,3 +192,58 @@ Run inference on the live camera feed with this option.
 		--model_outputs 1000,1,1
 		--model_name VGG16
 ```
+
+## Sample 2 - Detection Using Pre-Trained Caffe Model
+
+### Run Tiny YoloV2 on Live Video
+
+<p align="center"><img width="50%" src="images/app-control.png" /></p>
+
+* **Step 1:** Install all the Prerequisites
+
+	**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
+
+* **Step 2:** Download pre-trained Tiny YoloV2 caffe model - [yoloV2Tiny20.caffemodel](https://github.com/kiritigowda/YoloV2NCS/raw/master/models/caffemodels/yoloV2Tiny20.caffemodel)
+
+
+* **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
+
+	* Convert .caffemodel to NNIR
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py yoloV2Tiny20.caffemodel yoloV2_NNIR --input-dims 1,3,416,416
+	````
+
+	* Convert NNIR to OpenVX
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py yoloV2_NNIR yoloV2_OpenVX
+	````
+	**Note:** 
+	* Copy annmodule.cpp & annmodule.h generated in yoloV2_OpenVX into the module_files folder
+	* Use weights.bin generated in yoloV2_OpenVX folder for the classifier --model_weights option
+	
+* **Step 4:** Copy the annmodule.cpp & annmodule.h files into module_files folder. CMake and build this project
+
+	````
+	mkdir build
+	cd build
+	cmake ../
+	make
+	````
+	
+	<p align="center"><img width="50%" src="images/app_display.png" /></p>
+	
+* **Step 5:** Use the command below to run the classifier	
+
+```
+./classifier 	--mode 2
+		--capture 0
+		--model_weights PATH_TO/yoloV2_OpenVX/weights.bin
+		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_detection_labels.txt
+		--model_inputs 3,416,416
+		--model_outputs 125,12,12
+		--model_name YoloV2
+		--multiply 0.003922,0.003922,0.003922
+```
+**Note:** Tiny YoloV2 input needs to be preprocessed. We use the `--multiply` option to preprocess the input by a factor `1/255` 
