@@ -442,10 +442,12 @@ int main(int argc, const char ** argv)
 
     /*****Additions for classification****/
     Classifier *mClassifier;
-    if(modeType == "1" or modeType == "classification") 
-        mClassifier= new Classifier;
     float *outputBuffer;
-    outputBuffer = new float[output_c];
+    if(modeType == "1" or modeType == "classification") 
+    {
+        mClassifier= new Classifier;
+        outputBuffer = new float[output_c];
+    }
 
     /*****Additions for object detection****/
     Region *mRegion;
