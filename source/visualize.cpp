@@ -40,7 +40,7 @@ void Visualize::show() {
 			int width = size.width;
 			int height = size.height;
 			rectangle(mImage, Point((int)left, ((int)bottom - 5) - (height + 5)), Point(((int)left + width), ((int)bottom - 5)), clr, -1);
-			putText(mImage, txt, Point(((int)left + 5), ((int)bottom - 10)), CV_FONT_HERSHEY_SIMPLEX, 1.5, Scalar(255, 255, 255), 1, 8);
+			putText(mImage, txt, Point(((int)left + 5), ((int)bottom - 10)), CV_FONT_HERSHEY_SIMPLEX, 1.0, Scalar(255, 255, 255), 1, 8);
 		}
 	}
 	resize(img_cp, img_cp, Size(mImage.cols, mImage.rows));
