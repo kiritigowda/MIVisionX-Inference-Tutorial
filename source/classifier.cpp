@@ -484,14 +484,6 @@ int main(int argc, const char ** argv)
         }
     }
 
-    
-    
-    
-
-    
-
-    
-
     // Time per frame
     modelTime_g = modelTime;
 
@@ -891,38 +883,36 @@ int main(int argc, const char ** argv)
 
                 else if(modeType == "3" or modeType == "segmentation")
                 {
-
-                    t0 = clockCounter();
-                    usage = VX_READ_ONLY;
-                    vx_enum data_type = VX_TYPE_FLOAT32;
-				    vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
-				    vx_map_id map_id;
-				    float * ptr;
-				    vx_size count;
-				    vx_enum usage = VX_READ_ONLY;
-				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
-				    vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
-				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
-				    if(data_type != VX_TYPE_FLOAT32) {
-				        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
-				    }
-				    count = dims[0] * dims[1] * dims[2] * dims[3];
-				    vx_status status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
-				    if(status) {
-				        std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
-				    }
-				    memcpy(outputBuffer_seg[pipelinePointer], ptr, (count*sizeof(float)));
-				    status = vxUnmapTensorPatch(output_prob_tensor, map_id);
-				    if(status) {
-				        std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
-				    }
                     if(runModel)
                     {
-                       mSegment->getMaskImage(img_cp, input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer], labelText);
+                        t0 = clockCounter();
+                        usage = VX_READ_ONLY;
+                        vx_enum data_type = VX_TYPE_FLOAT32;
+    				    vx_size num_of_dims = 4, dims[4] = { 1, 1, 1, 1 }, stride[4];
+    				    vx_map_id map_id;
+    				    float * ptr;
+    				    vx_size count;
+    				    vx_enum usage = VX_READ_ONLY;
+    				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
+    				    vxQueryTensor(output_prob_tensor, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
+    				    vxQueryTensor(output_prob_tensor, VX_TENSOR_DIMS, &dims, sizeof(dims[0])*num_of_dims);
+    				    if(data_type != VX_TYPE_FLOAT32) {
+    				        std::cerr << "ERROR: copyTensor() supports only VX_TYPE_FLOAT32: invalid for "  << std::endl;
+    				    }
+    				    count = dims[0] * dims[1] * dims[2] * dims[3];
+    				    vx_status status = vxMapTensorPatch(output_prob_tensor, num_of_dims, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST, 0);
+    				    if(status) {
+    				        std::cerr << "ERROR: vxMapTensorPatch() failed for "  << std::endl;
+    				    }
+    				    memcpy(outputBuffer_seg[pipelinePointer], ptr, (count*sizeof(float)));
+    				    status = vxUnmapTensorPatch(output_prob_tensor, map_id);
+    				    if(status) {
+    				        std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
+    				    }
+                    
+                        mSegment->getMaskImage(img_cp, input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer], labelText);
                     }
                     
-
-
                     t1 = clockCounter();
                     msFrame += (float)(t1-t0)*1000.0f/(float)freq;
                 }
@@ -947,7 +937,6 @@ int main(int argc, const char ** argv)
    
     
     // release resources
-    
     delete [] outputBuffer;   
     delete mRegion;
     delete mClassifier;

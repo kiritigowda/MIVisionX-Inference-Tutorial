@@ -99,21 +99,9 @@ void Segment::createMask(size_t start , size_t end, int imageWidth, unsigned cha
     return;
 }
 
-
-void Segment::getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage, std::string labelText[])
+void Segment::createLegendImage(std::string labelText[])
 {
-    if(!initialized)
-    {
-        initialize();
-    }
-
-    if(!initialized)
-    {
-        printf("Fail to initialize internal buffer!\n");
-        return ;
-    }
-
-    // create legend image
+     // create legend image
     int fontFace = CV_FONT_HERSHEY_PLAIN;
     double fontScale = 1;
     int thickness = 1.2;
@@ -132,9 +120,6 @@ void Segment::getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, 
         rectangle(legend, cv::Point(125, (l * 25)) , cv::Point(300, (l * 25) + 25), cv::Scalar(red,green,blue),-1);
     }
 
-    
-    //cv::createTrackbar("Probability Threshold", MIVisionX_LEGEND_S, &threshold_slider, threshold_slider_max, &Segment::threshold_on_trackbar);
-    //cv::createTrackbar("Blend alpha", MIVisionX_LEGEND_S, &alpha_slider, alpha_slider_max, &Segment::alpha_on_trackbar);
     l = 21;
     std::string bufferName = "Confidence";
     putText(legend, bufferName, cv::Point(10, (l * 25) + 25), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
@@ -148,19 +133,41 @@ void Segment::getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, 
     cvui::trackbar(legend, 10, (l * 25)+25, 200, &alpha_slider, 0, 100);
     cvui::update();
     cv::imshow(MIVisionX_LEGEND_S, legend);
-    cv::Mat inputDisplay, outputDisplay,maskDisplay;  
 
+    
+    thresholdValue = (double) threshold_slider/threshold_slider_max ;
+    alphaValue = (double) alpha_slider/alpha_slider_max ;
+
+    return;
+}
+
+void Segment::getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage, std::string labelText[])
+{
+    if(!initialized)
+    {
+        initialize();
+    }
+
+    if(!initialized)
+    {
+        printf("Fail to initialize internal buffer!\n");
+        return ;
+    }
+
+    createLegendImage(labelText);
+   
     int numClasses = input_dims[1];
     int height = input_dims[2];
     int width = input_dims[3];
-    thresholdValue = (double) threshold_slider/threshold_slider_max ;
-    alphaValue = (double) alpha_slider/alpha_slider_max ;
     int numthreads = std::thread::hardware_concurrency();
     size_t start = 0, end = 0, chunk = 0;
     int outputImgWidth = 1080, outputImgHeight = 720;
 
     double alpha = alphaValue, beta;
     beta = ( 1.0 - alpha );
+    
+    cv::Mat inputDisplay, outputDisplay,maskDisplay;  
+
     // Initialize buffers
     memset(prob, 0, (width * height * sizeof(float)));
     memset(classImg, 0, (width * height));

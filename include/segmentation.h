@@ -38,6 +38,8 @@ public:
 
     static void alpha_on_trackbar( int threshold_slider_max, void* threshold_slider);
 
+    void createLegendImage(std::string labeltext[]);
+
     void findClassProb(size_t start , size_t end, int width, int height, int numClasses, float* output_layer, float threshold, float* prob, unsigned char* classImg);
 
     void createMask(size_t start , size_t end, int imageWidth, unsigned char* classImg, cv::Mat& maskImage);
