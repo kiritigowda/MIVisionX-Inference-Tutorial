@@ -21,7 +21,7 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 
 ## Usage
 
-### Neural Net Model Compiler & Optimizer - OpenVX Code Generation
+### Convert Pre-Trained Models into OpenVX
 
 Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp & annmodule.h into the module_files folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples [below](#sample-1---pre-trained-caffe-model).
 
@@ -29,7 +29,7 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 
 <p align="center"><img width="50%" src="images/app-control.png" /></p>
 
-Once the OpenVX code is generated and the files (annmodule.cpp & annmodule.h) copied into this project folder, follow the instructions below to build the project.
+Once the OpenVX code is generated(annmodule.cpp & annmodule.h), follow the instructions below to build the project.
 
 * Clone this Project
 ````
@@ -66,33 +66,41 @@ make
 [usage help]	--help/--h
 
 ```
-### Tested Models
-* [GoogleNet](http://www.cs.bu.edu/groups/ivc/data/SOS/GoogleNet_SOS.caffemodel)
-* [InceptionV4](https://github.com/soeaver/caffe-model/tree/master/cls#performance-on-imagenet-validation)
-* [ResNet50](https://github.com/KaimingHe/deep-residual-networks#deep-residual-networks)
-* [ResNet101](https://github.com/KaimingHe/deep-residual-networks#deep-residual-networks)
-* [ResNet152](https://github.com/KaimingHe/deep-residual-networks#deep-residual-networks)
-* [VGG16](http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel)
-* [VGG19](http://www.robots.ox.ac.uk/%7Evgg/software/very_deep/caffe/VGG_ILSVRC_19_layers.caffemodel)
-
 
 #### Generating weights.bin, annmodule.cpp, & annmodule.h for different Models
 
-1. Download or train your own caffemodel for the supported models listed above.
+1. Download or train your own `Caffe Model`/`ONNX Model`/`NNEF Model`.
 
-2. Use [MIVisionX Model Compiler](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX C Code from the pre-trained caffe models.
+2. Use [MIVisionX Model Compiler](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX C Code from the pre-trained models.
 
 **Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
 
 
-* Convert the pre-trained caffemodel into AMD NNIR model:
+* Convert the pre-trained models into AMD NNIR model:
+	* Caffe Models
 
 	````
 	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py <net.caffeModel> <nnirOutputFolder> --input-dims <n,c,h,w> [--verbose <0|1>]
 	````
 		Sample:
 		% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
+	
+	* ONNX Models
 
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/onnx_to_nnir.py <onnxModel> <nnirOutputFolder> [--input_dims n,c,h,w (optional)]
+	````
+		Sample:
+		% python /opt/rocm/mivisionx/model_compiler/python/onnx_to_nnir.py VGG_ILSVRC_16_layers.onnx VGG16_NNIR --input-dims 1,3,224,224
+	
+	* NNEF Models
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/nnef_to_nnir.py <nnefInputFolder> <outputFolder>
+	````
+		Sample:
+		% python /opt/rocm/mivisionx/model_compiler/python/nnef_to_nnir.py VGG_ILSVRC_16 VGG16_NNIR 
+	
 * Convert an AMD NNIR model into OpenVX C code:
 
 	````
@@ -108,17 +116,21 @@ make
 
 #### label < path to labels file >
 
-Use [labels.txt](data/labels.txt) or [simple_labels.txt](data/simple_labels.txt) file in the data folder
+Use [Classification labels](data/sample_classification_labels.txt) or [Detection labels](data/sample_detection_labels.txt) or [Segmentation Labels](data/sample_segmentation_labels.txt) files in the data folder depending on the type of model you are converting to OpenVX
 
 #### video < path to video file >
 
-Run classification on pre-recorded video with this option.
+Run inference on pre-recorded video with this option.
+
+#### image < path to image file >
+
+Run inference on an image with this option.
 
 #### capture <0>
 
-Run classification on the live camera feed with this option.
+Run inference on the live camera feed with this option.
 
-**Note:** --video and --capture options are not supported concurrently
+**Note:** --video/--capture/--image options are not supported concurrently
 
 # Supported Pre-Trained Model Formats
 * Caffe
