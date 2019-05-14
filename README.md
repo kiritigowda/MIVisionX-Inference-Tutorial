@@ -127,7 +127,7 @@ Run classification on the live camera feed with this option.
 
 <p align="center"><img width="70%" src="images/modelTrainedFrameWorks.png" /></p>
 
-## Sample 1 - Pre-Trained Caffe Model
+## Sample 1 - Claasification Using Pre-Trained Caffe Model
 
 ### Run VGG 16 Classification on Live Video
 
@@ -146,7 +146,7 @@ Run classification on the live camera feed with this option.
 	* Convert .caffemodel to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py upgraded_VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
+	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
 	````
 
 	* Convert NNIR to OpenVX
@@ -157,17 +157,18 @@ Run classification on the live camera feed with this option.
 
 	**Note:** 
 
-	* Copy annmodule.cpp & annmodule.h into the module_files folder 
-	* After copying the files, build this project
+	* Copy annmodule.cpp & annmodule.h generated in VGG16_OpenVX into the module_files folder
+	* After copying the files, cmake & build this project
 	* Use weights.bin generated in VGG16_OpenVX folder for the classifier --model_weights option
 	
 	<p align="center"><img width="50%" src="images/app_display.png" /></p>
 
 ```
-./classifier    --label PATH_TO/data/simple_labels.txt 
-                --capture 0 
-                --model_weights PATH_TO/VGG16_OpenVX/weights.bin
-		--model_name VGGNet-16
+./classifier 	--mode 1
+		--capture 0
+		--model_weights PATH_TO/VGG16_OpenVX/weights.bin
+		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt
 		--model_inputs 3,224,224
-		--model_outputs 1000
+		--model_outputs 1000,1,1
+		--model_name VGG16
 ```
