@@ -28,7 +28,7 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 ### Build - Inference Application
 Classification |  Detection | Segmentation
 :-------------------------:|:-------------------------:|:-------------------------:
-| <img width="80%" src="images/app-control.png" /> | <img width="45%" src="images/detection_legend.png" /> | <img width="50%" src="images/segmentation_legend.png" />
+<img width="80%" src="images/app-control.png" /> | <img width="45%" src="images/detection_legend.png" /> | <img width="50%" src="images/segmentation_legend.png" />
 
 Once the OpenVX code is generated(annmodule.cpp & annmodule.h), follow the instructions below to build the project.
 
