@@ -480,8 +480,8 @@ int main(int argc, const char ** argv)
         mSegment  = new Segment;
         for(int p = 0; p < pipelineDepth; p++){
             outputBuffer_seg[p] = new float[total_size];
-            classIDBuf[p] = new unsigned char[1024 * 2048];
-            prob[p] = new float[1024 * 2048];
+            classIDBuf[p] = new unsigned char[output_w * output_h];
+            prob[p] = new float[output_w * output_h];
             maskImage[p].create(input_geometry, CV_8UC3);
         }
     }
