@@ -26,8 +26,9 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp & annmodule.h into the module_files folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples [below](#sample-1---classification-using-pre-trained-caffe-model).
 
 ### Build - Inference Application
-
-<p align="center"><img width="50%" src="images/app-control.png" /></p>
+Classification | Detection | Segmentation
+:-------------------------:|:-------------------------:|:-------------------------:
+<img width="80%" src="images/app-control.png" /> | <img width="45%" src="images/detection_legend.png" /> | <img width="50%" src="images/segmentation_legend.png" />
 
 Once the OpenVX code is generated(annmodule.cpp & annmodule.h), follow the instructions below to build the project.
 
@@ -48,7 +49,9 @@ make
 
 ### Run
 
-<p align="center"><img width="50%" src="images/app_display.png" /></p>
+Classification |  Detection 
+:-------------------------:|:-------------------------:
+<img width="75%" src="images/app_display.png" /> | <img width="75%" src="images/detection_display.png" />
 
 ```
 ./classifier	--mode				<1/2/3 - 1:classification 2:detetction 3:segmentation>	[required]
