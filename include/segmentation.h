@@ -32,7 +32,7 @@ public:
 
     Segment();
 
-    void initialize(std::string labelText[]);
+    void initialize();
 
     static void threshold_on_trackbar( int threshold_slider_max, void* threshold_slider);
 
@@ -42,7 +42,7 @@ public:
 
     void createMask(size_t start , size_t end, int imageWidth, unsigned char* classImg, cv::Mat& maskImage);
 
-    void getMaskImage(int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage);
+    void getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage, std::string labelText[]);
 
 };
 

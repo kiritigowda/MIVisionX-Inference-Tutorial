@@ -441,12 +441,16 @@ int main(int argc, const char ** argv)
     }
 
     /*****Additions for classification****/
-    Classifier *mClassifier = new Classifier;
+    Classifier *mClassifier;
+    if(modeType == "1" or modeType == "classification") 
+        mClassifier= new Classifier;
     float *outputBuffer;
     outputBuffer = new float[output_c];
 
     /*****Additions for object detection****/
-    Region *mRegion = new Region;
+    Region *mRegion;
+    if(modeType == "2" or modeType == "detection") 
+        mRegion = new Region;
     float nms = 0.4;
     int targetBlockwd = 13;
     std::vector<DetectedObject> results;
@@ -454,14 +458,7 @@ int main(int argc, const char ** argv)
     float threshold_detect = 0.18;
     
     /*****Additions for segmentation****/
-    if (modeType == "3" or modeType == "segmentation"){
-        cv::namedWindow(MIVisionX_LEGEND_S);
-        cv::namedWindow(MIVisionX_DISPLAY_S_I,cv::WINDOW_GUI_EXPANDED);
-        cv::namedWindow(MIVisionX_DISPLAY_S_M,cv::WINDOW_GUI_EXPANDED);
-        cv::namedWindow(MIVisionX_DISPLAY_S_O,cv::WINDOW_GUI_EXPANDED);
-    }
-
-    Segment *mSegment = new Segment;
+    Segment *mSegment;
     int pipelineDepth = 2;
     int total_size = 2048*1024*19*1;
     int input_dims[4]={0};
@@ -477,17 +474,23 @@ int main(int argc, const char ** argv)
     float *outputBuffer_seg[pipelineDepth];
     unsigned char *classIDBuf[pipelineDepth];
     float *prob[pipelineDepth];
-    for(int p = 0; p < pipelineDepth; p++){
-        outputBuffer_seg[p] = new float[total_size];
-        classIDBuf[p] = new unsigned char[1024 * 2048];
-        prob[p] = new float[1024 * 2048];
-        maskImage[p].create(input_geometry, CV_8UC3);
+    if (modeType == "3" or modeType == "segmentation"){
+        mSegment  = new Segment;
+        for(int p = 0; p < pipelineDepth; p++){
+            outputBuffer_seg[p] = new float[total_size];
+            classIDBuf[p] = new unsigned char[1024 * 2048];
+            prob[p] = new float[1024 * 2048];
+            maskImage[p].create(input_geometry, CV_8UC3);
+        }
     }
 
-    double alpha = 0.8, beta;
-    beta = ( 1.0 - alpha );
+    
+    
+    
 
-    cv::Mat inputDisplay, outputDisplay, maskDisplay;
+    
+
+    
 
     // Time per frame
     modelTime_g = modelTime;
@@ -666,14 +669,9 @@ int main(int argc, const char ** argv)
 			    }
                 if(runModel)
                 {
-                   mSegment->getMaskImage(input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer]);
+                   mSegment->getMaskImage(img_cp, input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer], labelText);
                 }
-                cv::resize(inputFrame[pipelinePointer], inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
-		        cv::resize(maskImage[pipelinePointer], maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
-		        cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
-                cv::imshow(MIVisionX_DISPLAY_S_I, inputDisplay);
-                cv::imshow(MIVisionX_DISPLAY_S_M, maskDisplay);
-                cv::imshow(MIVisionX_DISPLAY_S_O, outputDisplay );
+                
 		        if( cv::waitKey(2) == 27 ){ exit(1); }
             }
         }
@@ -920,14 +918,9 @@ int main(int argc, const char ** argv)
 				    }
                     if(runModel)
                     {
-                       mSegment->getMaskImage(input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer]);
+                       mSegment->getMaskImage(img_cp, input_dims, prob[pipelinePointer], classIDBuf[pipelinePointer], outputBuffer_seg[pipelinePointer], input_geometry, maskImage[pipelinePointer], labelText);
                     }
-                    cv::resize(inputFrame[pipelinePointer], inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
-			        cv::resize(maskImage[pipelinePointer], maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
-			        cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
-			        cv::imshow(MIVisionX_DISPLAY_S_I, inputDisplay);
-			        cv::imshow(MIVisionX_DISPLAY_S_M, maskDisplay);
-			        cv::imshow(MIVisionX_DISPLAY_S_O, outputDisplay );
+                    
 
 
                     t1 = clockCounter();

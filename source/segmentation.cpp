@@ -25,30 +25,6 @@ unsigned char overlayColors[20][3] = {
     {119, 11, 32}       // bicycle
 };
 
-// source: adapted from cityscapes-dataset.org
-std::string segmentationClasses[20] = {
-    "Unclassified",
-    "road",
-    "sidewalk",
-    "building",
-    "wall",
-    "fence",
-    "pole",
-    "traffic light",
-    "traffic sign",
-    "vegetation",
-    "terrain",
-    "sky",
-    "person",
-    "rider",
-    "car",
-    "truck",
-    "bus",
-    "train",
-    "motorcycle",
-    "bicycle"
-};
-
 Segment::Segment()
 {
     initialized = false;
@@ -67,18 +43,20 @@ void Segment::alpha_on_trackbar( int, void* object){
 }
 
 
-void Segment::initialize(std::string labelText[])
+void Segment::initialize()
 {
-    int alpha_slider_max = 100;
-	int alpha_slider = 70;
-	double alphaValue = 0.7;
+    alpha_slider_max = 100;
+	alpha_slider = 70;
+	alphaValue = 0.7;
     threshold_slider_max = 100;
     threshold_slider = 50;
     thresholdValue = 0.5;
 
-    cv::createTrackbar("Probability Threshold", MIVisionX_LEGEND_S, &threshold_slider, threshold_slider_max, &Segment::threshold_on_trackbar);
-    cv::createTrackbar("Blend alpha", MIVisionX_LEGEND_S, &alpha_slider, alpha_slider_max, &Segment::alpha_on_trackbar);
-
+    cv::namedWindow(MIVisionX_LEGEND_S);
+    cvui::init(MIVisionX_LEGEND_S);
+    cv::namedWindow(MIVisionX_DISPLAY_S_I,cv::WINDOW_GUI_EXPANDED);
+    cv::namedWindow(MIVisionX_DISPLAY_S_M,cv::WINDOW_GUI_EXPANDED);
+    cv::namedWindow(MIVisionX_DISPLAY_S_O,cv::WINDOW_GUI_EXPANDED);
     initialized = true;
 }
 
@@ -122,16 +100,67 @@ void Segment::createMask(size_t start , size_t end, int imageWidth, unsigned cha
 }
 
 
-void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage)
+void Segment::getMaskImage(cv::Mat& inputImage, int input_dims[4], float* prob, unsigned char* classImg, float* output_layer, cv::Size input_geometry, cv::Mat& maskImage, std::string labelText[])
 {
+    if(!initialized)
+    {
+        initialize();
+    }
+
+    if(!initialized)
+    {
+        printf("Fail to initialize internal buffer!\n");
+        return ;
+    }
+
+    // create legend image
+    int fontFace = CV_FONT_HERSHEY_PLAIN;
+    double fontScale = 1;
+    int thickness = 1.2;
+    cv::Size legendGeometry = cv::Size(325, (30 * 25) + 25);
+    cv::Mat legend = cv::Mat::zeros(legendGeometry,CV_8UC3);
+    cv::Rect roi = cv::Rect(0,0,325,(30 * 25) + 25);
+    legend(roi).setTo(cv::Scalar(255,255,255));
+    int l;
+    for (l = 0; l < 20; l ++){
+        int red, green, blue;
+        red = (overlayColors[l][2]) ;
+        green = (overlayColors[l][1]) ;
+        blue = (overlayColors[l][0]) ;
+        std::string className = labelText[l];
+        putText(legend, className, cv::Point(5, (l * 25) + 17), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
+        rectangle(legend, cv::Point(125, (l * 25)) , cv::Point(300, (l * 25) + 25), cv::Scalar(red,green,blue),-1);
+    }
+
+    
+    //cv::createTrackbar("Probability Threshold", MIVisionX_LEGEND_S, &threshold_slider, threshold_slider_max, &Segment::threshold_on_trackbar);
+    //cv::createTrackbar("Blend alpha", MIVisionX_LEGEND_S, &alpha_slider, alpha_slider_max, &Segment::alpha_on_trackbar);
+    l = 21;
+    std::string bufferName = "Confidence";
+    putText(legend, bufferName, cv::Point(10, (l * 25) + 25), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
+    l++;
+    cvui::trackbar(legend, 10, (l * 25)+25, 200, &threshold_slider, 0, 100);
+    cvui::update();
+    l+=2;
+    bufferName = "Alpha Blend";
+    putText(legend, bufferName, cv::Point(10, (l * 25) + 25), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
+    l++;
+    cvui::trackbar(legend, 10, (l * 25)+25, 200, &alpha_slider, 0, 100);
+    cvui::update();
+    cv::imshow(MIVisionX_LEGEND_S, legend);
+    cv::Mat inputDisplay, outputDisplay,maskDisplay;  
+
     int numClasses = input_dims[1];
     int height = input_dims[2];
     int width = input_dims[3];
-    float threshold = (float) this->thresholdValue;
+    thresholdValue = (double) threshold_slider/threshold_slider_max ;
+    alphaValue = (double) alpha_slider/alpha_slider_max ;
     int numthreads = std::thread::hardware_concurrency();
     size_t start = 0, end = 0, chunk = 0;
+    int outputImgWidth = 1080, outputImgHeight = 720;
 
-
+    double alpha = alphaValue, beta;
+    beta = ( 1.0 - alpha );
     // Initialize buffers
     memset(prob, 0, (width * height * sizeof(float)));
     memset(classImg, 0, (width * height));
@@ -147,7 +176,7 @@ void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classI
         size_t s = start + i * chunk ;
         size_t e = s + chunk ;
 
-        t[i] = std::thread(&Segment::findClassProb, this, s, e, width, height, numClasses, output_layer,threshold, prob, classImg) ;
+        t[i] = std::thread(&Segment::findClassProb, this, s, e, width, height, numClasses, output_layer, thresholdValue, prob, classImg) ;
     }
     for(int i = 0 ; i < numthreads ; i++){ t[i].join() ; }
     
@@ -165,24 +194,12 @@ void Segment::getMaskImage(int input_dims[4], float* prob, unsigned char* classI
     }
 
     for(int i = 0 ; i < numthreads ; i++){ M[i].join() ; }
-    // create legend image
-    int fontFace = CV_FONT_HERSHEY_PLAIN;
-    double fontScale = 1;
-    int thickness = 1.2;
-    cv::Size legendGeometry = cv::Size(325, (20 * 25) + 25);
-    cv::Mat legend = cv::Mat::zeros(legendGeometry,CV_8UC3);
-    cv::Rect roi = cv::Rect(0,0,325,(20 * 25) + 25);
-    legend(roi).setTo(cv::Scalar(255,255,255));
-    int l;
-    for (l = 0; l < 20; l ++){
-        int red, green, blue;
-        red = (overlayColors[l][2]) ;
-        green = (overlayColors[l][1]) ;
-        blue = (overlayColors[l][0]) ;
-        std::string className = segmentationClasses[l];
-        putText(legend, className, cv::Point(5, (l * 25) + 17), fontFace, fontScale, cv::Scalar::all(0), thickness,8);
-        rectangle(legend, cv::Point(125, (l * 25)) , cv::Point(300, (l * 25) + 25), cv::Scalar(red,green,blue),-1);
-    }
-    cv::imshow(MIVisionX_LEGEND_S, legend);
+    
+    cv::resize(inputImage, inputDisplay, cv::Size(outputImgWidth,outputImgHeight));
+    cv::resize(maskImage, maskDisplay, cv::Size(outputImgWidth,outputImgHeight));
+    cv::addWeighted( inputDisplay, alpha, maskDisplay, beta, 0.0, outputDisplay);
+    cv::imshow(MIVisionX_DISPLAY_S_I, inputDisplay);
+    cv::imshow(MIVisionX_DISPLAY_S_M, maskDisplay);
+    cv::imshow(MIVisionX_DISPLAY_S_O, outputDisplay );    
     return;
 }
