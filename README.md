@@ -195,9 +195,9 @@ Run inference on the live camera feed with this option.
 
 ## Sample 2 - Detection Using Pre-Trained Caffe Model
 
-### Run Tiny YoloV2 on Live Video
+### Run Tiny YoloV2 on an Image
 
-<p align="center"><img width="50%" src="images/app-control.png" /></p>
+<p align="center"><img width="20%" src="images/detection_legend.png" /></p>
 
 * **Step 1:** Install all the Prerequisites
 
@@ -232,13 +232,13 @@ Run inference on the live camera feed with this option.
 	make
 	````
 	
-	<p align="center"><img width="50%" src="images/app_display.png" /></p>
+	<p align="center"><img width="50%" src="images/detection_display.png" /></p>
 	
 * **Step 5:** Use the command below to run the classifier	
 
 ```
 ./classifier 	--mode 2
-		--capture 0
+		--image PATH_TO/MIVisionX-Inference-Tutorial/data/images/img_01.JPG
 		--model_weights PATH_TO/yoloV2_OpenVX/weights.bin
 		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_detection_labels.txt
 		--model_inputs 3,416,416
