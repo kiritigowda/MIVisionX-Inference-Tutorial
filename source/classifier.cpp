@@ -928,7 +928,8 @@ int main(int argc, const char ** argv)
 
                 // wait to close live inference application
                 if( cv::waitKey(2) == 27 ){ loopSeg = 0; break; } // stop capturing by pressing ESC
-                else if( cv::waitKey(2) == 82 ){ break; } // for restart pressing R
+                if( cv::waitKey(1) == 32) { if(cv::waitKey(0) == 32) { continue; }}
+                if( cv::waitKey(1) == 82 ){ break; } // for restart pressing R
 
                 frameCount++;
             }  
@@ -936,15 +937,22 @@ int main(int argc, const char ** argv)
     }
    
     
-    // release resources
-    delete [] outputBuffer;   
-    delete mRegion;
-    delete mClassifier;
-    delete mSegment;
-    for(int p = 0; p < pipelineDepth; p++){
+    // release resources;
+    if(modeType == "1" or modeType == "classification")
+    {
+        delete mClassifier;
+        delete [] outputBuffer;  
+    }
+    else if(modeType == "2" or modeType == "detection")
+        delete mRegion;
+    else if(modeType == "3" or modeType == "segmentation")
+    {
+        delete mSegment;
+        for(int p = 0; p < pipelineDepth; p++){
         delete outputBuffer_seg[p];
         delete classIDBuf[p];
         delete prob[p];
+        }
     }
     // release input data
     ERROR_CHECK_STATUS(vxReleaseTensor(&input_data_tensor));
