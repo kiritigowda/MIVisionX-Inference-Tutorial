@@ -23,7 +23,7 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 
 ### Convert Pre-Trained Models into OpenVX
 
-Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp & annmodule.h into the module_files folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples [below](#sample-1---classification-using-pre-trained-caffe-model).
+Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX code from your pre-trained neural net model. The model compiler generates annmodule.cpp & annmodule.h during the OpenVX code generation. Copy annmodule.cpp & annmodule.h into the module_files folder of this project. The whole process of inference from a pre-trained neural net model will be shown in 3 different samples [below](#sample-1---classification-using-pre-trained-onnx-model).
 
 ### Build - Inference Application
 Classification | Detection | Segmentation
@@ -142,36 +142,43 @@ Run inference on the live camera feed with this option.
 
 <p align="center"><img width="70%" src="images/modelTrainedFrameWorks.png" /></p>
 
-## Sample 1 - Classification Using Pre-Trained Caffe Model
+## Sample 1 - Classification Using Pre-Trained ONNX Model
 
-### Run VGG 16 on Live Video
+### Run SqueezeNet on Live Video
 
-<p align="center"><img width="50%" src="images/app-control.png" /></p>
+<p align="center"><img width="50%" src="images/squeezenet_legend.png" /></p>
 
 * **Step 1:** Install all the Prerequisites
 
-	**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
+	**Note:**
+	* Install ONNX using `pip install onnx`
+	* MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
+	
 
-* **Step 2:** Download pre-trained VGG 16 caffe model - [VGG_ILSVRC_16_layers.caffemodel](http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel)
+* **Step 2:** Download pre-trained SqueezeNet ONNX model - [SqueezeNet Model](https://s3.amazonaws.com/download.onnx/models/opset_8/squeezenet.tar.gz)
+	````
+	% wget https://s3.amazonaws.com/download.onnx/models/opset_8/squeezenet.tar.gz
+	% tar -xvf squeezenet.tar.gz
+	````
+	**Note:** pre-trained model - `squeezenet/model.onnx` 
+
+* **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained ONNX model
 
 
-* **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
-
-
-	* Convert .caffemodel to NNIR
+	* Convert .onnx to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
+	% python /opt/rocm/mivisionx/model_compiler/python/onnx_to_nnir.py squeezenet/model.onnx squeezenet-nnir
 	````
 
 	* Convert NNIR to OpenVX
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py VGG16_NNIR VGG16_OpenVX
+	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py squeezenet-nnir/ squeezenet-openvx
 	````
 	**Note:** 
-	* Copy annmodule.cpp & annmodule.h generated in VGG16_OpenVX into the module_files folder
-	* Use weights.bin generated in VGG16_OpenVX folder for the classifier --model_weights option
+	* Copy annmodule.cpp & annmodule.h generated in squeezenet-openvx into the module_files folder
+	* Use weights.bin generated in squeezenet-openvx folder for the classifier --model_weights option
 	
 * **Step 4:** Copy the annmodule.cpp & annmodule.h files into module_files folder. CMake and build this project
 
@@ -182,18 +189,18 @@ Run inference on the live camera feed with this option.
 	make
 	````
 	
-	<p align="center"><img width="50%" src="images/app_display.png" /></p>
+	<p align="center"><img width="50%" src="images/squeezenet_display.png" /></p>
 	
 * **Step 5:** Use the command below to run the classifier
 
 ```
 ./classifier 	--mode 1
 		--capture 0
-		--model_weights PATH_TO/VGG16_OpenVX/weights.bin
+		--model_weights PATH_TO/squeezenet-openvx/weights.bin
 		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt
 		--model_inputs 3,224,224
 		--model_outputs 1000,1,1
-		--model_name VGG16
+		--model_name SqueezeNet
 ```
 
 ## Sample 2 - Detection Using Pre-Trained Caffe Model
@@ -250,3 +257,58 @@ Run inference on the live camera feed with this option.
 		--multiply 0.003922,0.003922,0.003922
 ```
 **Note:** Tiny YoloV2 input needs to be preprocessed. We use the `--multiply` option to preprocess the input by a factor `1/255` 
+
+
+## Sample 3 - Classification Using Pre-Trained Caffe Model
+
+### Run VGG 16 on Live Video
+
+<p align="center"><img width="50%" src="images/app-control.png" /></p>
+
+* **Step 1:** Install all the Prerequisites
+
+	**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
+
+* **Step 2:** Download pre-trained VGG 16 caffe model - [VGG_ILSVRC_16_layers.caffemodel](http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel)
+
+
+* **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
+
+
+	* Convert .caffemodel to NNIR
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel VGG16_NNIR --input-dims 1,3,224,224
+	````
+
+	* Convert NNIR to OpenVX
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py VGG16_NNIR VGG16_OpenVX
+	````
+	**Note:** 
+	* Copy annmodule.cpp & annmodule.h generated in VGG16_OpenVX into the module_files folder
+	* Use weights.bin generated in VGG16_OpenVX folder for the classifier --model_weights option
+	
+* **Step 4:** Copy the annmodule.cpp & annmodule.h files into module_files folder. CMake and build this project
+
+	````
+	mkdir build
+	cd build
+	cmake ../
+	make
+	````
+	
+	<p align="center"><img width="50%" src="images/app_display.png" /></p>
+	
+* **Step 5:** Use the command below to run the classifier
+
+```
+./classifier 	--mode 1
+		--capture 0
+		--model_weights PATH_TO/VGG16_OpenVX/weights.bin
+		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt
+		--model_inputs 3,224,224
+		--model_outputs 1000,1,1
+		--model_name VGG16
+```
