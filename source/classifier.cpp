@@ -35,7 +35,7 @@ THE SOFTWARE.
 #include <functional>
 
 //header file for different mode
-#include "region.h"
+#include "detection.h"
 #include "classification.h"
 #include "segmentation.h"
 
@@ -456,7 +456,6 @@ int main(int argc, const char ** argv)
     float nms = 0.4;
     int targetBlockwd = 13;
     std::vector<DetectedObject> results;
-    int confidence = 0.2;
     float threshold_detect = 0.18;
     
     /*****Additions for segmentation****/
@@ -630,18 +629,14 @@ int main(int argc, const char ** argv)
                 }
 
                 //call detect function for boxes!!
-                mRegion->GetDetections(ptr, (int)output_c, (int)output_h, (int)output_w, classes, frame.cols, frame.rows, threshold_detect, nms, targetBlockwd, results, labelText);
+                mRegion->GetDetections(img_cp, ptr, (int)output_c, (int)output_h, (int)output_w, classes, frame.cols, frame.rows, threshold_detect, nms, targetBlockwd, results, labelText);
 
                 status = vxUnmapTensorPatch(output_prob_tensor, map_id);
                 if(status) {
                     std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
                     return -1;
                 }
-                Visualize *mVisualize = new Visualize(img_cp, confidence, results);
-                mVisualize->show();
-                mVisualize->LegendImage(labelText);
                 cv::waitKey(0);
-                delete mVisualize;
             }
 
             else if (modeType == "3" or modeType == "segmentation")
@@ -876,17 +871,13 @@ int main(int argc, const char ** argv)
                         }
                         
                         //call detect function for boxes!!
-                        mRegion->GetDetections(ptr, (int)output_c, (int)output_h, (int)output_w, classes, frame.cols, frame.rows, threshold_detect, nms, targetBlockwd, results, labelText);
+                        mRegion->GetDetections(img_cp, ptr, (int)output_c, (int)output_h, (int)output_w, classes, frame.cols, frame.rows, threshold_detect, nms, targetBlockwd, results, labelText);
 
                         status = vxUnmapTensorPatch(output_prob_tensor, map_id);
                         if(status) {
                             std::cerr << "ERROR: vxUnmapTensorPatch() failed for "  << std::endl;
                             return -1;
                         }
-                        Visualize *mVisualize = new Visualize(img_cp, confidence, results);
-                        mVisualize->show();
-                        mVisualize->LegendImage(labelText);
-                        delete mVisualize;
                     }
                     t1 = clockCounter();
                     msFrame += (float)(t1-t0)*1000.0f/(float)freq;

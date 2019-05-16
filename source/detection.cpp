@@ -1,6 +1,7 @@
 
-#include "region.h"
+#include "detection.h"
 #include "common.h"
+#include "cvui.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,12 +36,67 @@ void Region::Initialize(int c, int h, int w, int size)
 		s[i].prob = &output[5];
 	}
 
+	mConfidence ;
+	mColorNum = c;
+	mWidth = w;
+	mHeight = h;
+
+	cv::namedWindow(MIVisionX_DISPLAY_D, cv::WINDOW_GUI_EXPANDED);
 
 	initialized = true;
 }
 
+void Region::show(cv::Mat &mImage, int mConfidence, std::vector<DetectedObject> &mResults) {
+	cv::Mat img_cp = mImage.clone();
+	resize(img_cp, img_cp, cv::Size(mWidth, mHeight));
+	int detectedNum = (int)mResults.size();
+	for (int i = 0; i < detectedNum; i++) {
+		float confidence = mResults[i].confidence;
+		confidence = confidence * 100;
 
-void Region::GetDetections(float* data, int c, int h, int w,
+		if (confidence > mConfidence) {
+
+			float left = mResults[i].left;
+			float top = mResults[i].top;
+			float right = (mResults[i].right - mResults[i].left) + left;
+			float bottom = (mResults[i].bottom - mResults[i].top)  + top;
+			int index = mResults[i].objType % mColorNum;
+			cv::Scalar clr(colors[index][0], colors[index][1], colors[index][2]);
+			std::string txt = mResults[i].name;
+			rectangle(mImage, cv::Point((int)left, (int)top), cv::Point((int)right, (int)bottom), clr, 2);
+			cv::Size size = cv::getTextSize(txt, CV_FONT_HERSHEY_SIMPLEX, 0.8, 1, 0);
+			int width = size.width;
+			int height = size.height;
+			rectangle(mImage, cv::Point((int)left, ((int)bottom - 5) - (height + 5)), cv::Point(((int)left + width), ((int)bottom - 5)), clr, -1);
+			putText(mImage, txt, cv::Point(((int)left + 5), ((int)bottom - 10)), CV_FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 255, 255), 1, 8);
+		}
+	}
+	resize(img_cp, img_cp, cv::Size(mImage.cols, mImage.rows));
+	imshow(MIVisionX_DISPLAY_D, mImage);
+
+	return;
+
+}
+
+void Region::LegendImage(std::string labelText[]) {
+
+	cv::Size legendGeometry = cv::Size(325, (20 * 40) + 40);
+	cv::Mat legend = cv::Mat::zeros(legendGeometry, CV_8UC3);
+	cv::Rect roi = cv::Rect(0, 0, 325, (20 * 40) + 40);
+	legend(roi).setTo(cv::Scalar(255, 255, 255));
+
+	for (int l = 0; l < 20; l++) {
+		cv::Scalar clr(colors[l][0], colors[l][1], colors[l][2]);
+		std::string className = labelText[l];
+		putText(legend, className, cv::Point(20, (l * 40) + 30), CV_FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 1, 8);
+		rectangle(legend, cv::Point(225, (l * 40)), cv::Point(300, (l * 40) + 40), clr, -1);
+	}
+	imshow(MIVisionX_LEGEND_D, legend);
+
+	return;
+}
+
+void Region::GetDetections(cv::Mat &frame, float* data, int c, int h, int w,
 						   int classes, int imgw, int imgh,
 						   float thresh, float nms,
 						   int blockwd,
@@ -63,7 +119,7 @@ void Region::GetDetections(float* data, int c, int h, int w,
 	int i,j,k;
 
 	transpose(data, &output[0], size*N, w*h);
-
+	int confidence = 0.2;
 	// Initialize box, scale and probability
 	for(i = 0; i < h*w*N; ++i)
 	{
@@ -150,6 +206,9 @@ void Region::GetDetections(float* data, int c, int h, int w,
 			objects.push_back(obj);
 		}
 	}
+
+	Region::LegendImage(labelText);
+	Region::show(frame, confidence, objects);
 
 	return ;
 }

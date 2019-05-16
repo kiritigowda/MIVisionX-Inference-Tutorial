@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <cmath>
+#include <vector>
 #include <string>
 
 #include "common.h"
@@ -32,19 +36,33 @@ static const int colors[20][3] = {
 			{199,21,133}        // tvmonitor
 };
 
-class Visualize {
-public:
-	Visualize(cv::Mat &image, int confidence, std::vector<DetectedObject> &results);
-	~Visualize();
-	void show();
+struct Region
+{
+	bool initialized;
+	int totalLength;
+	int totalObjects;
+	std::vector<float> output;
+	std::vector<ibox> boxes;
+	std::vector<indexsort> s;
+	int mConfidence;
+	int mColorNum;
+	int mWidth;
+	int mHeight;
+
+	Region();
+
+	void Initialize(int c, int h, int w, int size);
+
+
+	void GetDetections(cv::Mat &image, float* data, int c, int h, int w,
+		int classes, int imgw, int imgh,
+		float thresh, float nms,
+		int blockwd,
+		std::vector<DetectedObject> &objects, std::string labelText[]);
+	
+	void show(cv::Mat &image, int confidence, std::vector<DetectedObject> &results);
+	
 	void LegendImage(std::string labelText[]);
 
-private:
-	const int mConfidence;
-	const int mColorNum = 20;
-	const int mWidth = 416;
-	const int mHeight = 416;
-	cv::Mat &mImage;
-	std::vector<DetectedObject> mResults;
 
 };
