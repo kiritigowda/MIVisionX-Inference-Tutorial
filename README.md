@@ -10,6 +10,8 @@ In this tutorial, we will learn how to run inference efficiently using [OpenVX](
 
 Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/nnef), & [Caffe](http://caffe.berkeleyvision.org/) formats are supported by the model compiler & optimizer. The model compiler first converts the pre-trained models to AMD Neural Net Intermediate Representation (NNIR), once the model has been translated into AMD NNIR (AMD's internal open format), the Optimizer goes through the NNIR and applies various optimizations which would allow the model to be deployed on to target hardware most efficiently. Finally, AMD NNIR is converted into OpenVX C code, which could be compiled and deployed on any targeted hardware.
 
+<p align="center"><img width="100%" src="images/runtime.png" /></p>
+
 ### Prerequisites
 
 * Ubuntu `16.04`/`18.04` or CentOS `7.5`/`7.6`
