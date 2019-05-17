@@ -43,8 +43,7 @@ link_directories(/opt/rocm/mivisionx/lib)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
 list(APPEND SOURCES
-        source/region.cpp
-        source/visualize.cpp
+        source/detection.cpp
         source/common.cpp
         source/classification.cpp
         source/classifier.cpp
