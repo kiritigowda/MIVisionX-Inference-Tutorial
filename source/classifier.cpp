@@ -73,12 +73,12 @@ static void show_usage()
             "\n"
             "Usage:\n\n"
             "./classifier"
-            "\t--mode\t\t\t\t<1/2/3 - 1:classification 2:detetction 3:segmentation>\t[required]\n"
+            "\t--mode\t\t\t\t<1/2/3 - 1:classification 2:detection 3:segmentation>\t[required]\n"
             "\t\t--video/--capture/--image\t<video file>/<0>/<image file>\t\t\t\t[required]\n"
             "\t\t--model_weights\t\t\t<model_weights.bin>\t\t\t\t\t[required]\n"    
             "\t\t--label\t\t\t\t<label text>\t\t\t\t\t\t[required]\n"
-            "\t\t--model_inputs\t\t\t<c,h,w - channel,height,width>\t\t\t\t[required]\n"
-            "\t\t--model_outputs\t\t\t<c,h,w - channel,height,width>\t\t\t\t[required]\n\n"
+            "\t\t--model_input_dims\t\t\t<c,h,w - channel,height,width>\t\t\t\t[required]\n"
+            "\t\t--model_output_dims\t\t\t<c,h,w - channel,height,width>\t\t\t\t[required]\n\n"
             "\t\t--model_name\t\t\t<model name>\t\t\t\t\t[optional - default:NN_ModelName]\n"
             "\t\t--add\t\t\t\t<Ax,Ay,Az - input preprocessing factor>\t\t[optional - default:0,0,0]\n"
             "\t\t--multiply\t\t\t<Mx,My,Mz - input preprocessing factor>\t\t[optional - default:1,1,1]\n\n"
@@ -230,7 +230,7 @@ int main(int argc, const char ** argv)
             arg++;
             NN_ModelName = (argv[arg]);
         }
-        else if (!strcasecmp(argv[arg], "--model_inputs"))
+        else if (!strcasecmp(argv[arg], "--model_input_dims"))
         {
             if ((arg + 1) == argc)
             {
@@ -257,7 +257,7 @@ int main(int argc, const char ** argv)
             parameter++;         
             model_inputs_bool = true;   
         }
-        else if (!strcasecmp(argv[arg], "--model_outputs"))
+        else if (!strcasecmp(argv[arg], "--model_output_dims"))
         {
             if ((arg + 1) == argc)
             {
