@@ -56,12 +56,12 @@ Classification |  Detection
 <img width="75%" src="images/app_display.png" /> | <img width="75%" src="images/detection_display.png" />
 
 ```
-./classifier	--mode				<1/2/3 - 1:classification 2:detetction 3:segmentation>	[required]
+./classifier	--mode				<1/2/3 - 1:classification 2:detection 3:segmentation>	[required]
 		--video/--capture/--image	<video file>/<0>/<image file>				[required]
 		--model_weights			<model_weights.bin>					[required]
 		--label				<label text>						[required]
-		--model_inputs			<c,h,w - channel,height,width>				[required]
-		--model_outputs			<c,h,w - channel,height,width>				[required]
+		--model_input_dims		<c,h,w - channel,height,width>				[required]
+		--model_output_dims		<c,h,w - channel,height,width>				[required]
 
 		--model_name			<model name>					[optional - default:NN_ModelName]
 		--add				<Ax,Ay,Az - input preprocessing factor>		[optional - default:0,0,0]
@@ -200,8 +200,8 @@ Run inference on the live camera feed with this option.
 		--capture 0
 		--model_weights PATH_TO/squeezenet-openvx/weights.bin
 		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt
-		--model_inputs 3,224,224
-		--model_outputs 1000,1,1
+		--model_input_dims 3,224,224
+		--model_output_dims 1000,1,1
 		--model_name SqueezeNet
 ```
 
@@ -253,8 +253,8 @@ Run inference on the live camera feed with this option.
 		--image PATH_TO/MIVisionX-Inference-Tutorial/data/images/img_01.JPG
 		--model_weights PATH_TO/yoloV2_OpenVX/weights.bin
 		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_detection_labels.txt
-		--model_inputs 3,416,416
-		--model_outputs 125,12,12
+		--model_input_dims 3,416,416
+		--model_output_dims 125,12,12
 		--model_name YoloV2
 		--multiply 0.003922,0.003922,0.003922
 ```
@@ -310,7 +310,7 @@ Run inference on the live camera feed with this option.
 		--capture 0
 		--model_weights PATH_TO/VGG16_OpenVX/weights.bin
 		--label PATH_TO/MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt
-		--model_inputs 3,224,224
-		--model_outputs 1000,1,1
+		--model_input_dims 3,224,224
+		--model_output_dims 1000,1,1
 		--model_name VGG16
 ```
