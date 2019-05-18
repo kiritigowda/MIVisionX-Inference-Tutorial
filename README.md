@@ -212,7 +212,7 @@ Run inference on the live camera feed with this option.
 	
 	* Run SqueezeNet Classifier
 	```
-	% ./classifier --mode 1 --video ../MIVisionX-Inference-Tutorial/data/images/img_05.JPG --model_weights ../squeezenet-openvx/weights.bin --label ../MIVisionX-Inference-Tutorial/data/sample_detection_labels.txt --model_input_dims 3,224,224 --model_output_dims 1000,1,1 --model_name SqueezeNet_ONNX
+	% ./classifier --mode 1 --video ../MIVisionX-Inference-Tutorial/data/images/img_05.JPG --model_weights ../squeezenet-openvx/weights.bin --label ../MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt --model_input_dims 3,224,224 --model_output_dims 1000,1,1 --model_name SqueezeNet_ONNX
 	```
 
 ## Sample 2 - Detection Using Pre-Trained Caffe Model
