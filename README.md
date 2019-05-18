@@ -56,7 +56,7 @@ Classification |  Detection
 <img width="75%" src="images/app_display.png" /> | <img width="75%" src="images/detection_display.png" />
 
 ```
-./classifier	--mode				<1/2/3 - 1:classification 2:detetction 3:segmentation>	[required]
+./classifier	--mode				<1/2/3 - 1:classification 2:detection 3:segmentation>	[required]
 		--video/--capture/--image	<video file>/<0>/<image file>				[required]
 		--model_weights			<model_weights.bin>					[required]
 		--label				<label text>						[required]
