@@ -4,6 +4,17 @@
 
 In this tutorial, we will learn how to run inference efficiently using [OpenVX](https://www.khronos.org/openvx/) and [OpenVX Extensions](https://www.khronos.org/registry/OpenVX/extensions/vx_khr_nn/1.2/html/index.html). The tutorial will go over each step required to convert a pre-trained neural net model into an OpenVX Graph and run this graph efficiently on any target hardware. In this tutorial, we will learn about AMD MIVisionX which delivers open source implementation of OpenVX and OpenVX Extensions along with MIVisionX Neural Net Model Compiler & Optimizer.
 
+* [MIVisionX Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer)
+* [Prerequisites](#prerequisites)
+* [Usage](#usage)
+	* [Convert Pre-Trained Models into OpenVX](#convert-pre-trained-models-into-openvx)
+	* [Build Inference Application](#build---inference-application)
+	* [Run Inference Application](#run)
+* [Supported Pre-Trained Model Formats](#supported-pre-trained-model-formats)
+* [Sample-1: Classification Using Pre-Trained ONNX Model](#sample-1---classification-using-pre-trained-onnx-model)
+* [Sample-2: Detection Using Pre-Trained Caffe Model](#sample-2---detection-using-pre-trained-caffe-model)
+* [Sample-3: Classification Using Pre-Trained NNEF Model](#sample-3---classification-using-pre-trained-nnef-model)
+
 [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) converts pre-trained neural network models to MIVisionX runtime code for optimized inference.
 
 <p align="center"><img width="100%" src="images/frameworks.png" /></p>
@@ -33,7 +44,6 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 2. Use [MIVisionX Model Compiler](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX C Code from the pre-trained models.
 
 	**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
-
 
 * Convert the pre-trained models into AMD NNIR model:
 
@@ -285,7 +295,7 @@ Run inference on the live camera feed with this option.
 
 ## Sample 3 - Classification Using Pre-Trained NNEF Model
 
-### Run VGG 16 on Live Video
+### Run VGG 16 on a Video
 
 <p align="center"><img width="50%" src="images/app-control.png" /></p>
 
@@ -351,9 +361,9 @@ Run inference on the live camera feed with this option.
 	% ./classifier --help
 	```
 	
-	* Run YoloV2 Classifier
+	* Run VGG-16 Classifier
 	```
-	% ./classifier --mode 1 --capture 0 --model_weights ../vgg16-openvx/weights.bin --label ../MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt --model_input_dims 3,224,224 --model_output_dims 1000,1,1 --model_name VGG16_NNEF
+	% ./classifier --mode 1 --video ../MIVisionX-Inference-Tutorial/data/images/img_01.JPG --model_weights ../vgg16-openvx/weights.bin --label ../MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt --model_input_dims 3,224,224 --model_output_dims 1000,1,1 --model_name VGG16_NNEF
 	```
 	
 ## Sample 4 - Classification Using Pre-Trained Caffe Model
@@ -420,7 +430,7 @@ Run inference on the live camera feed with this option.
 	% ./classifier --help
 	```
 	
-	* Run YoloV2 Classifier
+	* Run VGG-16 Classifier
 	```
 	% ./classifier --mode 1 --capture 0 --model_weights ../vgg16-openvx/weights.bin --label ../MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt --model_input_dims 3,224,224 --model_output_dims 1000,1,1 --model_name VGG16_Caffe
 	```
