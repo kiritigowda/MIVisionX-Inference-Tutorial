@@ -32,7 +32,7 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 
 2. Use [MIVisionX Model Compiler](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/model_compiler#neural-net-model-compiler--optimizer) to generate OpenVX C Code from the pre-trained models.
 
-**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
+	**Note:** MIVisionX installs all the model compiler scripts in `/opt/rocm/mivisionx/model_compiler/python/` folder
 
 
 * Convert the pre-trained models into AMD NNIR model:
@@ -114,12 +114,6 @@ Classification |  Detection
 [usage help]	--help/--h
 
 ```
-
-#### Generating weights.bin, annmodule.cpp, & annmodule.h for different Models
-
-* The weights.bin, annmodule.cpp, & annmodule.h files will be generated inside the OpenVX folder and you can use these as inputs for this project.
-* Copy annmodule.cpp & annmodule.h into the module_files folder.
-
 #### label < path to labels file >
 
 Use [Classification labels](data/sample_classification_labels.txt) or [Detection labels](data/sample_detection_labels.txt) or [Segmentation Labels](data/sample_segmentation_labels.txt) files in the data folder depending on the type of model you are converting to OpenVX
@@ -289,7 +283,7 @@ Run inference on the live camera feed with this option.
 	* Use the `--multiply` option to preprocess the input by a factor `1/255` 
 
 
-## Sample 3 - Classification Using Pre-Trained Caffe Model
+## Sample 3 - Classification Using Pre-Trained NNEF Model
 
 ### Run VGG 16 on Live Video
 
@@ -299,6 +293,79 @@ Run inference on the live camera feed with this option.
 
 	````
 	% cd && mkdir sample-3 && cd sample-3
+	% git clone https://github.com/kiritigowda/MIVisionX-Inference-Tutorial.git
+	````
+
+	**Note:**
+	* MIVisionX needs to be pre-installed
+	* MIVisionX Model Compiler & Optimizer scripts are at `/opt/rocm/mivisionx/model_compiler/python/`
+	* NNEF model conversion requires [NNEF python parser](https://github.com/KhronosGroup/NNEF-Tools/tree/master/parser#nnef-parser-project) installed
+
+* **Step 2:** Download pre-trained VGG 16 NNEF model
+	````
+	% mkdir ~/sample-3/vgg16
+	% cd ~/sample-3/vgg16
+	% wget https://sfo2.digitaloceanspaces.com/nnef-public/vgg16.onnx.nnef.tgz
+	% tar -xvf vgg16.onnx.nnef.tgz
+	% cd ~/sample-3/
+	````
+
+* **Step 3:** Use MIVisionX Model Compiler to generate OpenVX files from the pre-trained caffe model
+
+	* Convert .nnef to NNIR
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/nnef_to_nnir.py vgg16/ vgg16-nnir
+	````
+	
+	* Convert NNIR to OpenVX
+
+	````
+	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py vgg16-nnir/ vgg16-openvx
+	````
+	**Note:** 
+	* annmodule.cpp & annmodule.h generated in vgg16-openvx folder
+	* weights.bin generated in vgg16-openvx folder is used for the classifier --model_weights option
+	
+* **Step 4:** Copy the annmodule.cpp & annmodule.h files into module_files folder. CMake and build this project
+
+	* Copy OpenVX generated code
+	````
+	% cp ~/sample-3/vgg16-openvx/annmodule.h ~/sample-3/MIVisionX-Inference-Tutorial/module_files/
+	% cp ~/sample-3/vgg16-openvx/annmodule.cpp ~/sample-3/MIVisionX-Inference-Tutorial/module_files/
+	````
+	* CMake and build
+	````
+	% mkdir ~/sample-3/build
+	% cd ~/sample-3/build/
+	% cmake ../MIVisionX-Inference-Tutorial/
+	% make
+	````
+	
+	<p align="center"><img width="50%" src="images/app_display.png" /></p>
+	
+* **Step 5:** Use the command below to run the classifier
+
+	* View classifier usage
+	```
+	% ./classifier --help
+	```
+	
+	* Run YoloV2 Classifier
+	```
+	% ./classifier --mode 1 --capture 0 --model_weights ../vgg16-openvx/weights.bin --label ../MIVisionX-Inference-Tutorial/data/sample_classification_labels.txt --model_input_dims 3,224,224 --model_output_dims 1000,1,1 --model_name VGG16_NNEF
+	```
+	
+## Sample 4 - Classification Using Pre-Trained Caffe Model
+
+### Run VGG 16 on Live Video
+
+<p align="center"><img width="50%" src="images/app-control.png" /></p>
+
+* **Step 1:** Clone MIVisionX Inference Tutorial Project
+
+	````
+	% cd && mkdir sample-4 && cd sample-4
 	% git clone https://github.com/kiritigowda/MIVisionX-Inference-Tutorial.git
 	````
 
@@ -333,13 +400,13 @@ Run inference on the live camera feed with this option.
 
 	* Copy OpenVX generated code
 	````
-	% cp ~/sample-3/vgg16-openvx/annmodule.h ~/sample-3/MIVisionX-Inference-Tutorial/module_files/
-	% cp ~/sample-3/vgg16-openvx/annmodule.cpp ~/sample-3/MIVisionX-Inference-Tutorial/module_files/
+	% cp ~/sample-4/vgg16-openvx/annmodule.h ~/sample-4/MIVisionX-Inference-Tutorial/module_files/
+	% cp ~/sample-4/vgg16-openvx/annmodule.cpp ~/sample-4/MIVisionX-Inference-Tutorial/module_files/
 	````
 	* CMake and build
 	````
-	% mkdir ~/sample-3/build
-	% cd ~/sample-3/build/
+	% mkdir ~/sample-4/build
+	% cd ~/sample-4/build/
 	% cmake ../MIVisionX-Inference-Tutorial/
 	% make
 	````
