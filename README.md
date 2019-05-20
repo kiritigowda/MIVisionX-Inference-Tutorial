@@ -119,7 +119,7 @@ Once the OpenVX code is generated(annmodule.cpp & annmodule.h), follow the instr
 ````
 % mkdir build
 % cd build
-% cmake ../MIVisionX-Image-Classifier
+% cmake ../MIVisionX-Inference-Tutorial
 % make
 ````
 
