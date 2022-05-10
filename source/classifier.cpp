@@ -28,6 +28,7 @@ THE SOFTWARE.
 // header file to include OpenVX Modules
 #include <vx_ext_amd.h>
 #include <vx_amd_nn.h>
+#include "cvui.h"
 
 // c/c++ includes
 #include <chrono>
