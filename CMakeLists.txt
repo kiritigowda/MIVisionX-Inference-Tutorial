@@ -38,7 +38,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(/opt/rocm/mivisionx/include /opt/rocm/include/mivisionx)
 include_directories(include)
 
-
 link_directories(/opt/rocm/mivisionx/lib)
 link_directories(/opt/rocm/lib)
 
