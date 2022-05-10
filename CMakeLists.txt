@@ -49,12 +49,6 @@ if(OpenCV_FOUND)
     endif()
 endif()
 
-if(${OpenCV_VERSION_MAJOR} EQUAL 4)
-	target_compile_definitions(classifier PUBLIC USE_OPENCV_4=1)
-else()
-	target_compile_definitions(classifier PUBLIC USE_OPENCV_4=0)
-endif()
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
 list(APPEND SOURCES
         source/detection.cpp
@@ -72,4 +66,8 @@ add_executable(classifier  ${SOURCES})
 target_compile_definitions(classifier PUBLIC ENABLE_OPENCV=1)
 target_link_libraries(classifier openvx vx_nn neuralNetModels ${OpenCV_LIBRARIES}  pthread)
 
-
+if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	target_compile_definitions(classifier PUBLIC USE_OPENCV_4=1)
+else()
+	target_compile_definitions(classifier PUBLIC USE_OPENCV_4=0)
+endif()
