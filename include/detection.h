@@ -9,6 +9,15 @@
 #include "common.h"
 #include "vx_ext_opencv.h"
 
+#if USE_OPENCV_4
+#define CV_BGR2RGB COLOR_BGR2RGB
+#define CV_DIST_L1 DIST_L1
+#define CV_BGR2GRAY COLOR_BGR2GRAY
+#define CV_GRAY2RGB COLOR_GRAY2RGB
+#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
+#define CV_FILLED FILLED
+#endif
+
 // Name Output Display Windows
 #define MIVisionX_LEGEND_D    "MIVisionX Image Detection"
 #define MIVisionX_DISPLAY_D   "MIVisionX Image Detection - Display"
