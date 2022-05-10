@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <fstream>
 
 //header file for different mode
 #include "detection.h"
