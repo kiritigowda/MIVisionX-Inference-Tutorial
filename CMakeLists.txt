@@ -35,11 +35,12 @@ find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers )
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(/opt/rocm/mivisionx/include)
+include_directories(/opt/rocm/mivisionx/include /opt/rocm/include/mivisionx)
 include_directories(include)
 
 
 link_directories(/opt/rocm/mivisionx/lib)
+link_directories(/opt/rocm/lib)
 
 if(OpenCV_FOUND)
     if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
