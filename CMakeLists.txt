@@ -41,6 +41,20 @@ include_directories(include)
 
 link_directories(/opt/rocm/mivisionx/lib)
 
+if(OpenCV_FOUND)
+    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
+    else()
+        message("-- WARNING: OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
+    endif()
+endif()
+
+if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	target_compile_definitions(classifier PUBLIC USE_OPENCV_4=1)
+else()
+	target_compile_definitions(classifier PUBLIC USE_OPENCV_4=0)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
 list(APPEND SOURCES
         source/detection.cpp

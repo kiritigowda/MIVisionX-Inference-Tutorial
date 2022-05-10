@@ -4,14 +4,16 @@
 #include <stdlib.h>
 #include <string>
 
-#if ENABLE_OPENCV
-#include <opencv2/opencv.hpp>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-
-#endif
-
 #include "vx_ext_opencv.h"
+
+#if USE_OPENCV_4
+#define CV_BGR2RGB COLOR_BGR2RGB
+#define CV_DIST_L1 DIST_L1
+#define CV_BGR2GRAY COLOR_BGR2GRAY
+#define CV_GRAY2RGB COLOR_GRAY2RGB
+#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
+#define CV_FILLED FILLED
+#endif
 
 // Name Output Display Windows
 #define MIVisionX_LEGEND    "MIVisionX Image Classification"
