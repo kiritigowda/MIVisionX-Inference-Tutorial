@@ -25,31 +25,31 @@ Pre-trained models in [ONNX](https://onnx.ai/), [NNEF](https://www.khronos.org/n
 
 ### Prerequisites
 
-* Ubuntu `16.04`/`18.04` or CentOS `7.5`/`7.6`
-* [ROCm supported hardware](https://rocm.github.io/ROCmInstall.html#hardware-support) 
+* Ubuntu `18.04`/`20.04` or CentOS `7`/`8`
+* [ROCm supported hardware](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.1.1/page/Prerequisite_Actions.html) 
 	* AMD Radeon GPU or AMD APU required
-* Latest [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
+* Latest [ROCm](https://docs.amd.com/category/ROCm™%20v5.x)
 * Build & Install [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#linux-1)
 
 #### Docker for tutorial
 
-MIVisionX provides developers with [docker images](https://hub.docker.com/u/mivisionx) for [Ubuntu 16.04](https://hub.docker.com/r/mivisionx/ubuntu-16.04), [Ubuntu 18.04](https://hub.docker.com/r/mivisionx/ubuntu-18.04), [CentOS 7.5](https://hub.docker.com/r/mivisionx/centos-7.5), & [CentOS 7.6](https://hub.docker.com/r/mivisionx/centos-7.5). Using docker images developers can quickly prototype and build applications without having to be locked into a single system setup or lose valuable time figuring out the dependencies of the underlying software.
+MIVisionX provides developers with [docker images](https://hub.docker.com/u/mivisionx) for [Ubuntu 18.04](https://hub.docker.com/r/mivisionx/ubuntu-18.04), [Ubuntu 20.04](https://hub.docker.com/r/mivisionx/ubuntu-20.04), [CentOS 7](https://hub.docker.com/r/mivisionx/centos-7), & [CentOS 8](https://hub.docker.com/r/mivisionx/centos-8). Using docker images developers can quickly prototype and build applications without having to be locked into a single system setup or lose valuable time figuring out the dependencies of the underlying software.
 
 ##### Docker with display option for the tutorial
 
-* Check [docker prerequisites](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#docker-workflow-sample-on-ubuntu-1604)
+* Check [docker prerequisites](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#docker-workflow-sample-on-ubuntu-1804--2004)
 
 * Start docker with display
 ````
-% sudo docker pull mivisionx/ubuntu-16.04:tutorial
+% sudo docker pull mivisionx/ubuntu-20.04:latest
 % xhost +local:root
-% sudo docker run -it --device=/dev/kfd --device=/dev/dri --cap-add=SYS_RAWIO --device=/dev/mem --group-add video --network host --env DISPLAY=unix$DISPLAY --privileged --volume $XAUTH:/root/.Xauthority --volume /tmp/.X11-unix/:/tmp/.X11-unix mivisionx/ubuntu-16.04:tutorial
+% sudo docker run -it --device=/dev/kfd --device=/dev/dri --cap-add=SYS_RAWIO --device=/dev/mem --group-add video --network host --env DISPLAY=unix$DISPLAY --privileged --volume $XAUTH:/root/.Xauthority --volume /tmp/.X11-unix/:/tmp/.X11-unix mivisionx/ubuntu-20.04:latest
 ````
 * Test display with MIVisionX sample
 ````
-% export PATH=$PATH:/opt/rocm/mivisionx/bin
-% export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/mivisionx/lib
-% runvx /opt/rocm/mivisionx/samples/gdf/canny.gdf
+% export PATH=$PATH:/opt/rocm/bin
+% export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+% runvx /opt/rocm/share/mivisionx/samples/gdf/canny.gdf
 ````
 
 ## Usage
@@ -74,19 +74,19 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 	* Caffe Models
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py <net.caffeModel> <nnirOutputFolder> --input-dims <n,c,h,w> [--verbose <0|1>]
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/caffe_to_nnir.py <net.caffeModel> <nnirOutputFolder> --input-dims <n,c,h,w> [--verbose <0|1>]
 	````
 	
 	* ONNX Models
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/onnx_to_nnir.py <onnxModel> <nnirOutputFolder> [--input_dims n,c,h,w (optional)]
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/onnx_to_nnir.py <onnxModel> <nnirOutputFolder> [--input_dims n,c,h,w (optional)]
 	````
 	
 	* NNEF Models
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnef_to_nnir.py <nnefInputFolder> <outputFolder>
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnef_to_nnir.py <nnefInputFolder> <outputFolder>
 	````
 	
 * Convert an AMD NNIR model into OpenVX C code:
@@ -94,7 +94,7 @@ Use MIVisionX [Neural Net Model Compiler & Optimizer](https://github.com/GPUOpen
 <p align="center"><img width="80%" src="images/flow-3-openvx-b.png" /></p>
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py <nnirModelFolder> <nnirModelOutputFolder>
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnir_to_openvx.py <nnirModelFolder> <nnirModelOutputFolder>
 	````
 
 ### Build - Inference Application
@@ -201,13 +201,13 @@ Run inference on the live camera feed with this option.
 	* Convert .onnx to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/onnx_to_nnir.py squeezenet/model.onnx squeezenet-nnir
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/onnx_to_nnir.py squeezenet/model.onnx squeezenet-nnir
 	````
 
 	* Convert NNIR to OpenVX
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py squeezenet-nnir/ squeezenet-openvx
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnir_to_openvx.py squeezenet-nnir/ squeezenet-openvx
 	````
 	**Note:** 
 	* annmodule.cpp & annmodule.h generated in squeezenet-openvx folder
@@ -269,13 +269,13 @@ Run inference on the live camera feed with this option.
 	* Convert .caffemodel to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py yoloV2Tiny20.caffemodel yoloV2-nnir --input-dims 1,3,416,416
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/caffe_to_nnir.py yoloV2Tiny20.caffemodel yoloV2-nnir --input-dims 1,3,416,416
 	````
 
 	* Convert NNIR to OpenVX
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py yoloV2-nnir yoloV2-openvx
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnir_to_openvx.py yoloV2-nnir yoloV2-openvx
 	````
 	**Note:** 
 	* annmodule.cpp & annmodule.h generated in yoloV2-openvx folder
@@ -346,13 +346,13 @@ Run inference on the live camera feed with this option.
 	* Convert .nnef to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnef_to_nnir.py vgg16/ vgg16-nnir
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnef_to_nnir.py vgg16/ vgg16-nnir
 	````
 	
 	* Convert NNIR to OpenVX
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py vgg16-nnir/ vgg16-openvx
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnir_to_openvx.py vgg16-nnir/ vgg16-openvx
 	````
 	**Note:** 
 	* annmodule.cpp & annmodule.h generated in vgg16-openvx folder
@@ -415,13 +415,13 @@ Run inference on the live camera feed with this option.
 	* Convert .caffemodel to NNIR
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel vgg16-nnir --input-dims 1,3,224,224
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/caffe_to_nnir.py VGG_ILSVRC_16_layers.caffemodel vgg16-nnir --input-dims 1,3,224,224
 	````
 	
 	* Convert NNIR to OpenVX
 
 	````
-	% python /opt/rocm/mivisionx/model_compiler/python/nnir_to_openvx.py vgg16-nnir vgg16-openvx
+	% python /opt/rocm/libexec/mivisionx/model_compiler/python/nnir_to_openvx.py vgg16-nnir vgg16-openvx
 	````
 	**Note:** 
 	* annmodule.cpp & annmodule.h generated in vgg16-openvx folder
